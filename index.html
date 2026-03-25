@@ -3,1135 +3,692 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vault — Gerenciador de Senhas</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Curso de Integração – Igreja do Nazareno</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0c10;
-    --surface: #0f1218;
-    --card: #141820;
-    --border: #1e2530;
-    --accent: #00e5a0;
-    --accent2: #0099ff;
-    --danger: #ff3b5c;
-    --warning: #ffb300;
-    --text: #c8d4e0;
-    --text-dim: #5a6a7a;
-    --text-bright: #eaf2ff;
-    --mono: 'Share Tech Mono', monospace;
-    --sans: 'Rajdhani', sans-serif;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Grid bg */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .app {
-    position: relative;
-    z-index: 1;
-    max-width: 820px;
-    margin: 0 auto;
-    padding: 24px 16px 60px;
-  }
-
-  /* Header */
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 36px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .logo-icon {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 0 20px rgba(0,229,160,0.3);
-  }
-
-  .logo-text {
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--text-bright);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-  }
-
-  .logo-text span {
-    color: var(--accent);
-  }
-
-  .stat-badge {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    background: var(--card);
-    border: 1px solid var(--border);
-    padding: 6px 14px;
-    border-radius: 20px;
-  }
-
-  .stat-badge b {
-    color: var(--accent);
-    font-family: var(--mono);
-  }
-
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 28px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 4px;
-  }
-
-  .tab {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    background: transparent;
-    color: var(--text-dim);
-    font-family: var(--sans);
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    border-radius: 9px;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  .tab:hover { color: var(--text); background: var(--border); }
-
-  .tab.active {
-    background: linear-gradient(135deg, rgba(0,229,160,0.15), rgba(0,153,255,0.1));
-    color: var(--accent);
-    border: 1px solid rgba(0,229,160,0.25);
-  }
-
-  /* Panels */
-  .panel { display: none; animation: fadeIn 0.25s ease; }
-  .panel.active { display: block; }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Form */
-  .form-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .form-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-  }
-
-  .form-title {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-bright);
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .form-title span { color: var(--accent); }
-
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
-
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-  }
-
-  .field.full { grid-column: 1 / -1; }
-
-  label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-  }
-
-  input[type="text"],
-  input[type="password"],
-  input[type="url"],
-  textarea {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text-bright);
-    font-family: var(--mono);
-    font-size: 14px;
-    padding: 11px 14px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-
-  input:focus, textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(0,229,160,0.1);
-  }
-
-  .pwd-wrap {
-    position: relative;
-  }
-
-  .pwd-wrap input { width: 100%; padding-right: 42px; }
-
-  .eye-btn {
-    position: absolute;
-    right: 10px; top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    cursor: pointer;
-    font-size: 16px;
-    padding: 4px;
-    transition: color 0.2s;
-  }
-
-  .eye-btn:hover { color: var(--accent); }
-
-  .gen-btn {
-    margin-top: 7px;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text-dim);
-    font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    padding: 5px 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .gen-btn:hover { border-color: var(--accent2); color: var(--accent2); }
-
-  .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
-
-  .btn {
-    padding: 11px 24px;
-    border-radius: 8px;
-    border: none;
-    font-family: var(--sans);
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), #00c27a);
-    color: #000;
-    box-shadow: 0 0 20px rgba(0,229,160,0.2);
-  }
-
-  .btn-primary:hover {
-    box-shadow: 0 0 30px rgba(0,229,160,0.4);
-    transform: translateY(-1px);
-  }
-
-  .btn-secondary {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-  }
-
-  .btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
-
-  .btn-danger {
-    background: rgba(255,59,92,0.1);
-    border: 1px solid rgba(255,59,92,0.3);
-    color: var(--danger);
-  }
-
-  .btn-danger:hover { background: rgba(255,59,92,0.2); }
-
-  .btn-edit {
-    background: rgba(0,153,255,0.1);
-    border: 1px solid rgba(0,153,255,0.3);
-    color: var(--accent2);
-  }
-
-  .btn-edit:hover { background: rgba(0,153,255,0.2); }
-
-  /* Search */
-  .search-wrap {
-    position: relative;
-    margin-bottom: 20px;
-  }
-
-  .search-wrap input {
-    width: 100%;
-    padding-left: 42px;
-    font-size: 15px;
-  }
-
-  .search-icon {
-    position: absolute;
-    left: 14px; top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-dim);
-    font-size: 16px;
-    pointer-events: none;
-  }
-
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 28px; right: 20px;
-    background: var(--card);
-    border: 1px solid var(--accent);
-    border-radius: 10px;
-    padding: 12px 20px;
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--accent);
-    box-shadow: 0 0 30px rgba(0,229,160,0.2);
-    z-index: 999;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all 0.3s ease;
-  }
-
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.error { border-color: var(--danger); color: var(--danger); box-shadow: 0 0 20px rgba(255,59,92,0.2); }
-
-  /* Entry list */
-  .entries-list { display: flex; flex-direction: column; gap: 10px; }
-
-  .entry-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px 20px;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .entry-card:hover {
-    border-color: rgba(0,229,160,0.3);
-    background: #181f2a;
-  }
-
-  .entry-card.selected {
-    border-color: var(--accent);
-    background: rgba(0,229,160,0.04);
-  }
-
-  .entry-card::after {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 3px;
-    background: linear-gradient(var(--accent), var(--accent2));
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .entry-card:hover::after, .entry-card.selected::after { opacity: 1; }
-
-  .entry-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .entry-info { flex: 1; min-width: 0; }
-
-  .entry-site {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-bright);
-    letter-spacing: 1px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .entry-login {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .entry-actions {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    flex-shrink: 0;
-  }
-
-  .icon-btn {
-    width: 32px; height: 32px;
-    border-radius: 7px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-dim);
-    font-size: 14px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
-  }
-
-  .icon-btn:hover.copy { border-color: var(--accent); color: var(--accent); }
-  .icon-btn:hover.edit { border-color: var(--accent2); color: var(--accent2); }
-  .icon-btn:hover.del { border-color: var(--danger); color: var(--danger); }
-
-  /* Detail expand */
-  .entry-detail {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-    display: none;
-  }
-
-  .entry-detail.open { display: block; animation: fadeIn 0.2s ease; }
-
-  .detail-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
-  .detail-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    width: 68px;
-    flex-shrink: 0;
-  }
-
-  .detail-val {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--text-bright);
-    flex: 1;
-    word-break: break-all;
-  }
-
-  .detail-val.masked { letter-spacing: 3px; color: var(--text-dim); }
-
-  .detail-actions { display: flex; gap: 6px; align-items: center; }
-
-  .mini-btn {
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    background: none;
-    color: var(--text-dim);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  /* Modal */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    backdrop-filter: blur(4px);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
-
-  .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
-
-  .modal {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    width: 100%;
-    max-width: 480px;
-    padding: 28px;
-    position: relative;
-  }
-
-  .modal::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent2), var(--accent));
-    border-radius: 18px 18px 0 0;
-  }
-
-  .modal-title {
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-bright);
-    margin-bottom: 22px;
-  }
-
-  .modal-field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
-
-  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-dim);
-  }
-
-  .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
-  .empty-text { font-size: 14px; letter-spacing: 1px; }
-
-  .strength-bar {
-    height: 3px;
-    border-radius: 2px;
-    background: var(--border);
-    margin-top: 6px;
-    overflow: hidden;
-  }
-
-  .strength-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.3s, background 0.3s;
-    width: 0%;
-  }
-
-  .strength-label {
-    font-size: 10px;
-    font-family: var(--mono);
-    color: var(--text-dim);
-    margin-top: 3px;
-  }
-  .btn-hdr {
-    padding: 7px 14px;
-    border-radius: 8px;
-    border: none;
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-backup {
-    background: rgba(0,229,160,0.1);
-    border: 1px solid rgba(0,229,160,0.3);
-    color: var(--accent);
-  }
-  .btn-backup:hover { background: rgba(0,229,160,0.2); box-shadow: 0 0 14px rgba(0,229,160,0.2); }
-  .btn-restore {
-    background: rgba(0,153,255,0.1);
-    border: 1px solid rgba(0,153,255,0.3);
-    color: var(--accent2);
-  }
-  .btn-restore:hover { background: rgba(0,153,255,0.2); box-shadow: 0 0 14px rgba(0,153,255,0.2); }
-  .restore-opts { display: flex; flex-direction: column; gap: 12px; margin: 18px 0; }
-  .restore-opt {
-    display: flex; align-items: flex-start; gap: 14px;
-    padding: 14px 16px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--surface);
-    cursor: pointer; transition: all 0.2s;
-  }
-  .restore-opt:hover { border-color: rgba(0,153,255,0.4); background: rgba(0,153,255,0.05); }
-  .restore-opt input[type=radio] { margin-top: 2px; accent-color: var(--accent2); }
-  .restore-opt-title { font-size: 14px; font-weight: 700; color: var(--text-bright); letter-spacing: 1px; }
-  .restore-opt-desc { font-size: 12px; color: var(--text-dim); margin-top: 3px; line-height: 1.4; }
-  .restore-info {
-    font-family: var(--mono); font-size: 12px; color: var(--text-dim);
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;
-  }
-  .restore-info b { color: var(--accent2); }
+:root{--gold:#C8A96E;--gold-light:#E8D5A8;--gold-dark:#8B6F3A;--bg:#0D1117;--bg2:#161B22;--bg3:#1C2430;--surface:#1F2937;--text:#F0EBE0;--text-muted:#A89880;--accent:#4A90D9;--accent2:#7EC8A4;--red:#D97B6B;--radius:12px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+#loginScreen{position:fixed;inset:0;z-index:999;background:linear-gradient(160deg,#080b10 0%,#1a1200 50%,#080b10 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{width:100%;max-width:380px;background:var(--bg2);border:1px solid rgba(200,169,110,.3);border-radius:20px;padding:36px 28px;animation:fadeUp .5s ease;}
+.login-cross{text-align:center;font-size:2.8rem;margin-bottom:10px;}
+.login-box h2{font-family:'Playfair Display',serif;color:var(--gold);text-align:center;font-size:1.4rem;margin-bottom:4px;}
+.login-sub{font-size:.73rem;color:var(--gold-light);text-align:center;margin-bottom:3px;}
+.login-addr{font-size:.68rem;color:var(--text-muted);text-align:center;margin-bottom:26px;}
+.login-label{font-size:.75rem;font-weight:700;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;display:block;}
+.login-input{width:100%;background:var(--bg3);border:1px solid rgba(200,169,110,.2);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Lato',sans-serif;font-size:.9rem;margin-bottom:14px;transition:border-color .2s;}
+.login-input:focus{outline:none;border-color:var(--gold);}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold-dark),var(--gold));border:none;border-radius:8px;color:#0D1117;font-family:'Lato',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:opacity .2s;margin-top:4px;}
+.login-btn:hover{opacity:.85;}
+.login-err{font-size:.8rem;color:var(--red);text-align:center;margin-top:10px;min-height:18px;}
+#app{display:none;}
+header{background:linear-gradient(135deg,#0D1117 0%,#1a1200 50%,#0D1117 100%);border-bottom:1px solid rgba(200,169,110,.25);padding:12px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:12px;}
+.hi{font-size:1.5rem;}
+.ht h1{font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold);line-height:1.2;}
+.ht .hs{font-size:.7rem;color:var(--gold-light);margin-top:2px;}
+.ht .ha{font-size:.64rem;color:var(--text-muted);margin-top:1px;}
+.logout-btn{margin-left:auto;background:transparent;border:1px solid rgba(200,169,110,.25);border-radius:6px;padding:5px 10px;color:var(--text-muted);font-size:.72rem;cursor:pointer;transition:all .2s;font-family:'Lato',sans-serif;white-space:nowrap;}
+.logout-btn:hover{border-color:var(--gold);color:var(--gold);}
+nav{display:flex;background:var(--bg2);border-bottom:1px solid rgba(200,169,110,.15);overflow-x:auto;scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+.nav-btn{flex:none;padding:11px 16px;background:none;border:none;color:var(--text-muted);font-family:'Lato',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+.nav-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+.nav-btn:hover:not(.active){color:var(--text);}
+main{max-width:720px;margin:0 auto;padding:20px 16px 80px;}
+.page{display:none;animation:fadeUp .35s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.module-card{background:var(--bg2);border:1px solid rgba(200,169,110,.2);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;transition:border-color .2s;}
+.module-card:hover{border-color:rgba(200,169,110,.45);}
+.module-header{display:flex;align-items:center;gap:12px;padding:16px;cursor:pointer;user-select:none;}
+.module-num{width:36px;height:36px;background:linear-gradient(135deg,var(--gold-dark),var(--gold));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.85rem;font-weight:700;color:#0D1117;flex-shrink:0;}
+.mi{flex:1;}.mi h3{font-size:.95rem;font-weight:700;color:var(--text);}.mi p{font-size:.78rem;color:var(--text-muted);margin-top:2px;}
+.ma{color:var(--gold);transition:transform .25s;font-size:1rem;}
+.module-card.open .ma{transform:rotate(90deg);}
+.module-body{display:none;padding:0 16px 16px;}
+.module-card.open .module-body{display:block;}
+.module-body p{font-size:.88rem;line-height:1.75;color:var(--text);margin-bottom:10px;}
+.module-body h4{font-family:'Playfair Display',serif;color:var(--gold);font-size:.95rem;margin:14px 0 6px;}
+.module-body ul{padding-left:20px;margin-bottom:10px;}
+.module-body ul li{font-size:.86rem;line-height:1.7;color:var(--text);margin-bottom:4px;}
+.vb{background:linear-gradient(135deg,rgba(200,169,110,.08),rgba(200,169,110,.03));border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:12px 14px;margin:12px 0;}
+.vb .vr{font-size:.75rem;font-weight:700;color:var(--gold);letter-spacing:.06em;margin-bottom:4px;}
+.vb .vt{font-family:'Playfair Display',serif;font-style:italic;font-size:.88rem;line-height:1.65;color:var(--gold-light);}
+.section-title{font-family:'Playfair Display',serif;color:var(--gold);font-size:1.2rem;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(200,169,110,.2);}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+@media(max-width:480px){.card-grid{grid-template-columns:1fr;}}
+.info-card{background:var(--bg2);border:1px solid rgba(200,169,110,.18);border-radius:var(--radius);padding:16px;}
+.info-card .ici{font-size:1.6rem;margin-bottom:8px;}
+.info-card h4{font-size:.85rem;font-weight:700;color:var(--gold);margin-bottom:6px;}
+.info-card p{font-size:.8rem;line-height:1.6;color:var(--text-muted);}
+.hbox{background:linear-gradient(135deg,rgba(78,144,217,.08),rgba(126,200,164,.06));border:1px solid rgba(78,144,217,.3);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+.hbox h4{font-family:'Playfair Display',serif;color:var(--accent);font-size:1rem;margin-bottom:8px;}
+.hbox p{font-size:.86rem;line-height:1.7;color:var(--text);}
+.verse-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.vf-btn{padding:6px 14px;background:var(--bg2);border:1px solid rgba(200,169,110,.25);border-radius:20px;color:var(--text-muted);font-size:.75rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.vf-btn.active{background:var(--gold-dark);border-color:var(--gold);color:var(--text);}
+.verse-card{background:var(--bg2);border:1px solid rgba(200,169,110,.18);border-radius:var(--radius);padding:18px;margin-bottom:12px;}
+.vc-mod{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+.vc-ref{font-size:.78rem;color:var(--gold);font-weight:700;margin-bottom:8px;}
+.vc-text{font-family:'Playfair Display',serif;font-style:italic;font-size:.92rem;line-height:1.7;color:var(--gold-light);margin-bottom:10px;}
+.vc-ctx{font-size:.8rem;line-height:1.6;color:var(--text-muted);}
+.rc{background:var(--bg2);border:1px solid rgba(200,169,110,.18);border-radius:var(--radius);padding:20px;margin-bottom:14px;}
+.rc-lbl{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent2);margin-bottom:6px;}
+.rc-q{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--text);margin-bottom:14px;line-height:1.5;}
+.rc-ta{width:100%;background:var(--bg3);border:1px solid rgba(200,169,110,.2);border-radius:8px;padding:12px;color:var(--text);font-family:'Lato',sans-serif;font-size:.85rem;line-height:1.6;resize:vertical;min-height:80px;transition:border-color .2s;}
+.rc-ta:focus{outline:none;border-color:var(--gold);}
+.rc-save{margin-top:8px;padding:7px 16px;background:linear-gradient(135deg,var(--gold-dark),var(--gold));border:none;border-radius:20px;color:#0D1117;font-family:'Lato',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;}
+.rc-saved{font-size:.75rem;color:var(--accent2);margin-left:8px;opacity:0;transition:opacity .4s;}
+.rc-saved.show{opacity:1;}
+.qm-sel{display:flex;flex-direction:column;gap:10px;}
+.qm-card{background:var(--bg2);border:1px solid rgba(200,169,110,.2);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;}
+.qm-card:hover{border-color:var(--gold);background:var(--bg3);}
+.qm-num{width:40px;height:40px;background:linear-gradient(135deg,var(--gold-dark),var(--gold));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700;color:#0D1117;flex-shrink:0;}
+.qm-info{flex:1;}.qm-info h4{font-size:.92rem;font-weight:700;color:var(--text);margin-bottom:2px;}.qm-info p{font-size:.75rem;color:var(--text-muted);}
+.qm-score{font-size:.78rem;color:var(--accent2);font-weight:700;white-space:nowrap;}
+.qm-arr{color:var(--gold);font-size:1.1rem;}
+.qp{background:var(--bg2);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.qpb-wrap{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.qpb{height:100%;background:linear-gradient(90deg,var(--gold-dark),var(--gold));border-radius:3px;transition:width .4s ease;}
+.qp-txt{font-size:.75rem;color:var(--text-muted);white-space:nowrap;}
+.qp-back{background:none;border:none;color:var(--text-muted);font-size:.78rem;cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;white-space:nowrap;padding:0;transition:color .2s;}
+.qp-back:hover{color:var(--gold);}
+.qcard{background:var(--bg2);border:1px solid rgba(200,169,110,.2);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+.qcard .qmod{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+.qcard .qq{font-family:'Playfair Display',serif;font-size:1rem;line-height:1.55;color:var(--text);margin-bottom:16px;}
+.qopts{display:flex;flex-direction:column;gap:8px;}
+.qopt{padding:12px 14px;background:var(--bg3);border:1px solid rgba(200,169,110,.15);border-radius:8px;color:var(--text);font-family:'Lato',sans-serif;font-size:.86rem;cursor:pointer;text-align:left;transition:all .2s;}
+.qopt:hover:not(:disabled){border-color:var(--gold);background:var(--surface);}
+.qopt.correct{background:rgba(126,200,164,.15);border-color:var(--accent2);color:var(--accent2);}
+.qopt.wrong{background:rgba(217,123,107,.12);border-color:var(--red);color:var(--red);}
+.qopt:disabled{cursor:default;}
+.qfb{margin-top:14px;padding:12px 14px;border-radius:8px;font-size:.84rem;line-height:1.6;display:none;}
+.qfb.correct{background:rgba(126,200,164,.12);border:1px solid rgba(126,200,164,.3);color:var(--accent2);display:block;}
+.qfb.wrong{background:rgba(217,123,107,.1);border:1px solid rgba(217,123,107,.3);color:var(--red);display:block;}
+.qnav{display:flex;gap:10px;justify-content:space-between;}
+.btn{padding:10px 22px;border-radius:8px;font-family:'Lato',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:all .2s;border:none;}
+.btn-primary{background:linear-gradient(135deg,var(--gold-dark),var(--gold));color:#0D1117;}
+.btn-primary:hover{opacity:.85;}
+.btn-ghost{background:transparent;border:1px solid rgba(200,169,110,.3);color:var(--text-muted);}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+.btn:disabled{opacity:.4;cursor:default;}
+.score-panel{text-align:center;background:var(--bg2);border:1px solid rgba(200,169,110,.25);border-radius:var(--radius);padding:36px 20px;}
+.score-panel .sp-icon{font-size:3rem;margin-bottom:14px;}
+.score-panel h3{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold);margin-bottom:8px;}
+.score-panel p{font-size:.9rem;color:var(--text-muted);line-height:1.6;}
+.score-num{font-size:2.5rem;font-weight:700;color:var(--gold);margin:16px 0;}
+.scroll-top{position:fixed;bottom:20px;right:16px;width:42px;height:42px;background:var(--gold-dark);border:none;border-radius:50%;color:#fff;font-size:1.1rem;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s;z-index:50;}
+.scroll-top.show{opacity:1;pointer-events:auto;}
 </style>
 </head>
 <body>
-<div class="app">
 
-  <div class="header">
-    <div class="logo">
-      <div class="logo-icon">🔐</div>
-      <div class="logo-text">VL<span>T</span></div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px;">
-      <div class="stat-badge" style="width:100%;text-align:center;">Entradas: <b id="count">0</b></div>
-      <div style="display:flex;gap:7px;width:100%;">
-        <button class="btn-hdr btn-backup" style="flex:1;" onclick="exportBackup()" title="Exportar backup JSON">⬇ Backup</button>
-        <button class="btn-hdr btn-restore" style="flex:1;" onclick="document.getElementById('restore-file').click()" title="Restaurar de arquivo">⬆ Restaurar</button>
-        <input type="file" id="restore-file" accept=".json" style="display:none" onchange="importBackup(this)">
-      </div>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('add')">
-      <span>＋</span> Adicionar
-    </button>
-    <button class="tab" onclick="switchTab('search')">
-      <span>⌕</span> Consultar
-    </button>
-  </div>
-
-  <!-- ADD PANEL -->
-  <div class="panel active" id="panel-add">
-    <div class="form-card">
-      <div class="form-title"><span>◈</span> Nova Entrada</div>
-      <div class="form-grid">
-        <div class="field">
-          <label>Site / Serviço</label>
-          <input type="text" id="add-site" placeholder="ex: Gmail, Netflix…" autocomplete="off">
-        </div>
-        <div class="field">
-          <label>URL (opcional)</label>
-          <input type="url" id="add-url" placeholder="https://…" autocomplete="off">
-        </div>
-        <div class="field">
-          <label>Login / E-mail</label>
-          <input type="text" id="add-login" placeholder="usuario@email.com" autocomplete="off">
-        </div>
-        <div class="field">
-          <label>Senha</label>
-          <div class="pwd-wrap">
-            <input type="password" id="add-pwd" placeholder="••••••••" autocomplete="new-password"
-              oninput="checkStrength(this.value,'add-strength','add-strength-label')">
-            <button class="eye-btn" onclick="toggleEye('add-pwd',this)">👁</button>
-          </div>
-          <div class="strength-bar"><div class="strength-fill" id="add-strength"></div></div>
-          <div class="strength-label" id="add-strength-label"></div>
-          <button class="gen-btn" onclick="generatePassword()">⚡ Gerar senha forte</button>
-        </div>
-        <div class="field full">
-          <label>Nota (opcional)</label>
-          <input type="text" id="add-note" placeholder="info extra…" autocomplete="off">
-        </div>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-secondary" onclick="clearForm()">Limpar</button>
-        <button class="btn btn-primary" onclick="saveEntry()">🔒 Salvar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SEARCH PANEL -->
-  <div class="panel" id="panel-search">
-    <div class="search-wrap">
-      <span class="search-icon">⌕</span>
-      <input type="text" id="search-input" placeholder="Buscar por site ou login…" oninput="renderList()">
-    </div>
-    <div class="entries-list" id="entries-list">
-      <div class="empty-state">
-        <div class="empty-icon">🗄️</div>
-        <div class="empty-text">Nenhuma entrada salva ainda</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- EDIT MODAL -->
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <div class="modal-title">✏️ Editar Entrada</div>
-    <input type="hidden" id="edit-id">
-    <div class="modal-field">
-      <label>Site / Serviço</label>
-      <input type="text" id="edit-site" autocomplete="off">
-    </div>
-    <div class="modal-field">
-      <label>URL</label>
-      <input type="url" id="edit-url" autocomplete="off">
-    </div>
-    <div class="modal-field">
-      <label>Login / E-mail</label>
-      <input type="text" id="edit-login" autocomplete="off">
-    </div>
-    <div class="modal-field">
-      <label>Senha</label>
-      <div class="pwd-wrap">
-        <input type="password" id="edit-pwd" autocomplete="new-password"
-          oninput="checkStrength(this.value,'edit-strength','edit-strength-label')">
-        <button class="eye-btn" onclick="toggleEye('edit-pwd',this)">👁</button>
-      </div>
-      <div class="strength-bar"><div class="strength-fill" id="edit-strength"></div></div>
-      <div class="strength-label" id="edit-strength-label"></div>
-    </div>
-    <div class="modal-field">
-      <label>Nota</label>
-      <input type="text" id="edit-note" autocomplete="off">
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveEdit()">💾 Salvar</button>
-    </div>
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-cross">✝</div>
+    <h2>Curso de Integração</h2>
+    <p class="login-sub">Igreja do Nazareno Semeando Esperança</p>
+    <p class="login-sub" style="color:var(--gold)">Pastores: Ismael &amp; Mirian</p>
+    <p class="login-addr">Rua Jaime de Carvalho, 285 – Vila Georgina</p>
+    <label class="login-label">Usuário</label>
+    <input class="login-input" id="loginUser" type="text" placeholder="Digite o usuário" autocomplete="username">
+    <label class="login-label">Senha</label>
+    <input class="login-input" id="loginPass" type="password" placeholder="Digite a senha" autocomplete="current-password">
+    <button class="login-btn" onclick="doLogin()">Entrar →</button>
+    <div class="login-err" id="loginErr"></div>
   </div>
 </div>
 
+<div id="app">
+<header>
+  <div class="hi">✝</div>
+  <div class="ht">
+    <h1>Curso de Integração</h1>
+    <p class="hs">Pastores: Ismael &amp; Mirian</p>
+    <p class="ha">Rua Jaime de Carvalho, 285 – Vila Georgina</p>
+  </div>
+  <button class="logout-btn" onclick="doLogout()">Sair</button>
+</header>
+<nav>
+  <button class="nav-btn active" data-page="modulos">📖 Módulos</button>
+  <button class="nav-btn" data-page="fixar">📌 Fixar</button>
+  <button class="nav-btn" data-page="versiculos">📜 Versículos</button>
+  <button class="nav-btn" data-page="reflexao">✍️ Reflexão</button>
+  <button class="nav-btn" data-page="quiz">🎯 Quiz</button>
+</nav>
+<main>
 
-<!-- RESTORE MODAL -->
-<div class="modal-overlay" id="modal-restore">
-  <div class="modal">
-    <div class="modal-title">⬆ Restaurar Backup</div>
-    <div class="restore-info" id="restore-info">Nenhum arquivo carregado</div>
-    <div class="restore-opts">
-      <label class="restore-opt">
-        <input type="radio" name="restore-mode" value="merge" checked>
-        <div>
-          <div class="restore-opt-title">🔀 Mesclar</div>
-          <div class="restore-opt-desc">Adiciona as entradas do backup às existentes. Duplicatas (mesmo site + login) são ignoradas.</div>
-        </div>
-      </label>
-      <label class="restore-opt">
-        <input type="radio" name="restore-mode" value="replace">
-        <div>
-          <div class="restore-opt-title">♻ Substituir tudo</div>
-          <div class="restore-opt-desc">Apaga todas as entradas atuais e importa somente as do backup. Ação irreversível.</div>
-        </div>
-      </label>
+<div id="page-modulos" class="page active">
+  <p style="font-size:.82rem;color:var(--text-muted);line-height:1.6;margin-bottom:18px">Clique no módulo para expandir o conteúdo.</p>
+  <div class="module-card"><div class="module-header"><div class="module-num">01</div><div class="mi"><h3>A Obra de Cristo por Nós</h3><p>Pecado, salvação, justificação, regeneração e adoção</p></div><span class="ma">›</span></div>
+  <div class="module-body">
+    <h4>2 Tipos de Pecado</h4><ul><li><strong>Adâmico:</strong> tendência pecaminosa com que nascemos.</li><li><strong>Voluntário:</strong> ato consciente — a culpa é nossa.</li></ul>
+    <div class="vb"><div class="vr">Romanos 6.23</div><div class="vt">O salário do pecado é a morte.</div></div>
+    <h4>3 Coisas simultâneas na conversão</h4><ul><li><strong>Justificação</strong> (Rm 5.1) — absolvidos no tribunal de Deus.</li><li><strong>Regeneração</strong> (2 Co 5.17) — nova natureza em nós.</li><li><strong>Adoção</strong> (Jo 1.12) — filhos com acesso ao Pai e herança.</li></ul>
+    <div class="vb"><div class="vr">Tito 3.4-7</div><div class="vt">Ele nos salvou não por obras de justiça praticadas por nós, mas segundo a sua misericórdia…</div></div>
+  </div></div>
+  <div class="module-card"><div class="module-header"><div class="module-num">02</div><div class="mi"><h3>A Obra do Espírito Santo em Nós</h3><p>Santificação, batismo com o Espírito, frutos</p></div><span class="ma">›</span></div>
+  <div class="module-body">
+    <h4>A Crise no Coração</h4><p>Após a conversão a tendência ao pecado persiste. Como Israel saindo do Egito — Deus tirou o povo do Egito, mas precisava tirar o Egito do coração do povo (Nm 11.4).</p>
+    <div class="vb"><div class="vr">Mateus 3.11</div><div class="vt">Ele os batizará com o Espírito Santo e com fogo.</div></div>
+    <h4>5 Passos para o Batismo com o Espírito</h4><ul><li>Certeza de que os pecados foram perdoados.</li><li>Reconhecer a tendência pecaminosa e desejar ser liberto.</li><li>Entender que somente Cristo tem a solução.</li><li>Entregar totalmente a Deus.</li><li>Buscar em oração e fé.</li></ul>
+    <p><strong>Evidência interna:</strong> purificação do coração (At 15.7-9). <strong>Externa:</strong> Fruto do Espírito (Gl 5.22-23).</p>
+  </div></div>
+  <div class="module-card"><div class="module-header"><div class="module-num">03</div><div class="mi"><h3>Discipulado e Propósito</h3><p>Ser semelhante a Jesus, viver o propósito de Deus</p></div><span class="ma">›</span></div>
+  <div class="module-body">
+    <div class="vb"><div class="vr">Mateus 28.19-20</div><div class="vt">Vão e façam discípulos de todas as nações.</div></div>
+    <h4>O Alvo do Discipulado</h4><p>Não é ser um membro melhor. O alvo é <strong>SER SEMELHANTE A JESUS</strong> — em caráter e em poder (Rm 8.29).</p>
+    <h4>Vivendo o Propósito</h4><ul><li>Identidade e propósito são descobertos em relacionamento com Jesus.</li><li>Deus pensava em você antes de você existir.</li><li>Seu propósito cabe em um propósito cósmico maior.</li></ul>
+    <div class="vb"><div class="vr">Colossenses 1.16</div><div class="vt">Tudo foi criado por meio dele e para ele.</div></div>
+  </div></div>
+  <div class="module-card"><div class="module-header"><div class="module-num">04</div><div class="mi"><h3>Mordomia Cristã</h3><p>Tempo, família, recursos e dízimo</p></div><span class="ma">›</span></div>
+  <div class="module-body">
+    <p>Mordomia cristã é gerenciar o que Deus confiou a nós — tempo, recursos, relacionamentos — para glorificar o nome d'Ele.</p>
+    <div class="vb"><div class="vr">Salmos 119.105</div><div class="vt">Lâmpada para os meus pés é a tua palavra, é luz para os meus caminhos.</div></div>
+    <h4>Mordomia da Família</h4><p>Esposas (Ef 5.22), maridos (Ef 5.25), filhos (Ef 6.1-3), pais (Ef 6.4).</p>
+    <h4>O Dízimo</h4><p>10% anterior à Lei — desde Abraão (Gn 14.17-21). Devolvemos como gratidão a Deus (Ml 1.6-14).</p>
+  </div></div>
+  <div class="module-card"><div class="module-header"><div class="module-num">05</div><div class="mi"><h3>Cobertura Espiritual</h3><p>Cidade de refúgio; parábola do bom samaritano</p></div><span class="ma">›</span></div>
+  <div class="module-body">
+    <h4>A Parábola do Bom Samaritano (Lc 10.25-35)</h4><ul><li>🧍 O homem caído = humanidade pecadora</li><li>⚠️ Sacerdote e levita = lei e sacrifícios incapazes de salvar</li><li>🫶 O samaritano = Jesus</li><li>🫒 Óleo e vinho = Espírito Santo e sangue de Cristo</li><li>🏨 A hospedaria = a Igreja</li><li>🧑‍💼 O hospedeiro = o Espírito Santo</li><li>⏳ "Quando eu voltar" = segunda vinda de Jesus</li></ul>
+    <div class="vb"><div class="vr">Mateus 16.18</div><div class="vt">As portas do inferno não prevalecerão contra ela.</div></div>
+  </div></div>
+  <div class="module-card"><div class="module-header"><div class="module-num">06</div><div class="mi"><h3>Vida e Testemunho Cristão</h3><p>Pacto de caráter e posições da Igreja do Nazareno</p></div><span class="ma">›</span></div>
+  <div class="module-body">
+    <h4>Pacto de Caráter — 3 Pilares</h4><ul><li>✅ <strong>Fazer</strong> o que a Palavra ordena</li><li>🚫 <strong>Evitar</strong> o mal de toda espécie</li><li>🤝 <strong>Permanecer</strong> em comunhão com a Igreja</li></ul>
+    <p>Abstinência total de álcool, tabaco e drogas. Sexualidade dentro do casamento entre homem e mulher. Vida humana sagrada desde a concepção.</p>
+    <div class="vb"><div class="vr">1 Coríntios 6.19-20</div><div class="vt">O corpo de vocês é santuário do Espírito Santo… glorifiquem a Deus no corpo.</div></div>
+  </div></div>
+</div>
+
+<div id="page-fixar" class="page">
+  <p class="section-title">📌 Conceitos Essenciais</p>
+  <div class="hbox"><h4>🎯 O objetivo do Discipulado</h4><p>Não é ser um membro melhor. O alvo é <strong>SER SEMELHANTE A JESUS</strong> — em caráter e em poder. Rm 8.29 | 1 Co 11.1</p></div>
+  <div class="card-grid">
+    <div class="info-card"><div class="ici">⚖️</div><h4>Justificação</h4><p>Absolvidos no tribunal de Deus. Rm 5.1</p></div>
+    <div class="info-card"><div class="ici">🌱</div><h4>Regeneração</h4><p>Nova natureza — nova semente. 2 Co 5.17</p></div>
+    <div class="info-card"><div class="ici">👑</div><h4>Adoção</h4><p>Filhos com acesso ao Pai e herança. Jo 1.12</p></div>
+    <div class="info-card"><div class="ici">🔥</div><h4>Batismo c/ Espírito</h4><p>Coração liberto e em devoção total. Mt 3.11</p></div>
+    <div class="info-card"><div class="ici">⏰</div><h4>Mordomia do Tempo</h4><p>Equilibrar Deus, família e trabalho.</p></div>
+    <div class="info-card"><div class="ici">💰</div><h4>O Dízimo</h4><p>10% devolvidos. Anterior à Lei. Ml 1.6-14</p></div>
+    <div class="info-card"><div class="ici">🏨</div><h4>A Igreja</h4><p>Cidade de refúgio. Hospedaria. Lugar de restauração.</p></div>
+    <div class="info-card"><div class="ici">🕊️</div><h4>Pacto de Caráter</h4><p>Fazer o bem · Evitar o mal · Permanecer.</p></div>
+  </div>
+  <div class="hbox" style="border-color:rgba(126,200,164,.35)"><h4 style="color:var(--accent2)">📜 Dois Sacramentos</h4><p><strong>Batismo</strong> = inclusão no Corpo de Cristo.<br><strong>Santa Ceia</strong> = proclama a morte e vinda de Cristo.</p></div>
+  <div class="hbox" style="border-color:rgba(217,123,107,.3)"><h4 style="color:var(--red)">⚠️ Dois Tipos de Pecado</h4><p><strong>Adâmico:</strong> tendência herdada.<br><strong>Voluntário:</strong> ato consciente — a culpa é nossa.</p></div>
+  <p class="section-title" style="margin-top:24px">🏛️ Timeline da Igreja do Nazareno</p>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;gap:12px"><div style="font-size:.75rem;font-weight:700;color:var(--gold);min-width:40px;padding-top:2px">1517</div><div style="font-size:.83rem;color:var(--text-muted);line-height:1.6">Reforma Protestante — Martinho Lutero.</div></div>
+    <div style="display:flex;gap:12px"><div style="font-size:.75rem;font-weight:700;color:var(--gold);min-width:40px;padding-top:2px">1703</div><div style="font-size:.83rem;color:var(--text-muted);line-height:1.6">Nasce John Wesley — fundador do movimento de santidade metodista.</div></div>
+    <div style="display:flex;gap:12px"><div style="font-size:.75rem;font-weight:700;color:var(--gold);min-width:40px;padding-top:2px">1908</div><div style="font-size:.83rem;color:var(--text-muted);line-height:1.6">Fundação em Pilot Point, Texas — três grupos se unem.</div></div>
+    <div style="display:flex;gap:12px"><div style="font-size:.75rem;font-weight:700;color:var(--gold);min-width:40px;padding-top:2px">1958</div><div style="font-size:.83rem;color:var(--text-muted);line-height:1.6">Igreja chega ao Brasil — Campinas, bairro Cambuí.</div></div>
+    <div style="display:flex;gap:12px"><div style="font-size:.75rem;font-weight:700;color:var(--gold);min-width:40px;padding-top:2px">1988</div><div style="font-size:.83rem;color:var(--text-muted);line-height:1.6">Fundação da Igreja Semeando Esperança em Campinas.</div></div>
+  </div>
+</div>
+
+<div id="page-versiculos" class="page">
+  <p class="section-title">📜 Versículos por Aula</p>
+  <div class="verse-filter" id="verseFilter">
+    <button class="vf-btn active" data-filter="all">Todos</button>
+    <button class="vf-btn" data-filter="a01">Aula 01</button>
+    <button class="vf-btn" data-filter="a02">Aula 02</button>
+    <button class="vf-btn" data-filter="a03">Aula 03</button>
+    <button class="vf-btn" data-filter="a04">Aula 04</button>
+    <button class="vf-btn" data-filter="a05">Aula 05</button>
+    <button class="vf-btn" data-filter="a06">Aula 06</button>
+  </div>
+  <div id="verseList"></div>
+</div>
+
+<div id="page-reflexao" class="page">
+  <p class="section-title">✍️ Perguntas para Reflexão</p>
+  <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:18px;line-height:1.6">Reflita e anote. Respostas salvas neste dispositivo.</p>
+  <div id="reflectionList"></div>
+</div>
+
+<div id="page-quiz" class="page">
+  <div id="quizSelector">
+    <p class="section-title">🎯 Quiz por Módulo</p>
+    <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:16px;line-height:1.6">Escolha um módulo. 30 questões com feedback imediato.</p>
+    <div class="qm-sel" id="quizModuleList"></div>
+  </div>
+  <div id="quizRunner" style="display:none">
+    <div class="qp">
+      <button class="qp-back" onclick="backToSelector()">‹ Módulos</button>
+      <div class="qpb-wrap"><div class="qpb" id="quizBar" style="width:0%"></div></div>
+      <div class="qp-txt" id="quizCount">0/30</div>
     </div>
-    <div class="modal-btns">
-      <button class="btn btn-secondary" onclick="closeRestoreModal()">Cancelar</button>
-      <button class="btn btn-primary" id="btn-confirm-restore" onclick="confirmRestore()" disabled>✓ Confirmar</button>
+    <div id="quizArea"></div>
+    <div id="scoreArea" style="display:none"></div>
+    <div class="qnav" id="quizNav">
+      <button class="btn btn-ghost" id="btnPrev" disabled>‹ Anterior</button>
+      <button class="btn btn-primary" id="btnNext" disabled>Próxima ›</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+</main>
+</div>
 
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 <script>
-  let entries = JSON.parse(localStorage.getItem('vlt_entries') || '[]');
-  let openCard = null;
 
-  function save() {
-    localStorage.setItem('vlt_entries', JSON.stringify(entries));
-    document.getElementById('count').textContent = entries.length;
+// LOGIN
+function doLogin(){
+  const u=document.getElementById('loginUser').value.trim().toLowerCase();
+  const p=document.getElementById('loginPass').value;
+  if(u==='nazareno'&&p==='Inter26'){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+  }else{
+    const e=document.getElementById('loginErr');
+    e.textContent='Usuário ou senha incorretos.';
+    setTimeout(()=>e.textContent='',2500);
   }
+}
+document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('loginUser').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginPass').focus();});
+function doLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+}
+// NAV
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-'+btn.dataset.page).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+document.querySelectorAll('.module-header').forEach(h=>{
+  h.addEventListener('click',()=>h.parentElement.classList.toggle('open'));
+});
+window.addEventListener('scroll',()=>{
+  document.getElementById('scrollTop').classList.toggle('show',window.scrollY>300);
+});
 
-  function toast(msg, err=false) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast show' + (err ? ' error' : '');
-    clearTimeout(t._t);
-    t._t = setTimeout(() => t.className = 'toast', 2500);
-  }
+// VERSÍCULOS
+const verses=[
+  {f:'a01',ref:'Romanos 3.10-12,23',t:'Não há justo, nem um sequer... todos pecaram.',c:'Todos precisamos de salvação.'},
+  {f:'a01',ref:'Romanos 5.12',t:'O pecado é um problema que afeta toda a humanidade.',c:'O pecado adâmico nos atinge desde o nascimento.'},
+  {f:'a01',ref:'Isaías 64.6',t:'Nossas obras de justiça própria são como trapos de imundícia.',c:'Não podemos nos salvar por obras próprias.'},
+  {f:'a01',ref:'Romanos 6.23',t:'O salário do pecado é a morte.',c:'A consequência do pecado é separação eterna de Deus.'},
+  {f:'a01',ref:'Isaías 59.1-2',t:'O pecado faz separação entre Deus e o homem.',c:'O pecado rompe o relacionamento com o Criador.'},
+  {f:'a01',ref:'João 3.36',t:'Quem crê no Filho tem a vida eterna; quem se mantém rebelde não verá a vida.',c:'Salvação é receber o Filho.'},
+  {f:'a01',ref:'Colossenses 2.13-14',t:'Jesus cancelou o escrito de dívida que era contra nós, cravando-o na cruz.',c:'Cristo pagou nossa dívida inteiramente.'},
+  {f:'a01',ref:'Tito 3.4-7',t:'Ele nos salvou não por obras de justiça, mas segundo a sua misericórdia.',c:'A salvação é pela graça de Deus.'},
+  {f:'a02',ref:'Mateus 3.11',t:'Ele os batizará com o Espírito Santo e com fogo.',c:'João Batista anuncia a obra do Espírito além da conversão.'},
+  {f:'a02',ref:'Atos 2.37-38',t:'Arrependam-se, e cada um seja batizado em nome de Jesus Cristo.',c:'Pedro convida ao arrependimento e à promessa do Espírito.'},
+  {f:'a02',ref:'Gálatas 5.22-23',t:'O fruto do Espírito é amor, alegria, paz, paciência...',c:'Evidência externa do batismo com o Espírito.'},
+  {f:'a03',ref:'Mateus 28.19-20',t:'Vão e façam discípulos de todas as nações.',c:'A Grande Comissão — nosso chamado fundamental.'},
+  {f:'a03',ref:'Romanos 8.29',t:'Predestinou para serem conformes à imagem de seu Filho.',c:'O alvo do discipulado: ser semelhante a Jesus.'},
+  {f:'a03',ref:'Colossenses 1.16',t:'Tudo foi criado por meio dele e para ele.',c:'Fomos criados para Deus — Ele é a fonte do nosso propósito.'},
+  {f:'a04',ref:'Salmos 119.105',t:'Lâmpada para os meus pés é a tua palavra.',c:'A Palavra de Deus nos dá direção diária.'},
+  {f:'a04',ref:'2 Timóteo 3.16-17',t:'Toda a Escritura é inspirada por Deus e útil para o ensino.',c:'A Bíblia é suficiente para nos equipar completamente.'},
+  {f:'a04',ref:'Malaquias 1.6-14',t:'Honrar a Deus com o dízimo é demonstrar gratidão e fidelidade.',c:'O dízimo reconhece que tudo pertence a Deus.'},
+  {f:'a04',ref:'Hebreus 10.25',t:'Não deixemos de nos congregar, como é costume de alguns.',c:'A vida em comunidade não é opcional para o cristão.'},
+  {f:'a05',ref:'Mateus 16.18',t:'Edificarei a minha Igreja, e as portas do inferno não prevalecerão.',c:'A Igreja pertence a Cristo — Ele a edifica e protege.'},
+  {f:'a05',ref:'1 Coríntios 12.27',t:'Vocês são o corpo de Cristo e, individualmente, membros desse corpo.',c:'Ninguém é Igreja sozinho.'},
+  {f:'a05',ref:'Hebreus 10.24-25',t:'Cuidemos de nos animar uns aos outros no amor e boas obras.',c:'A comunidade cristã serve para edificação mútua.'},
+  {f:'a06',ref:'1 Coríntios 6.19-20',t:'O corpo de vocês é santuário do Espírito Santo… glorifiquem a Deus.',c:'Fundamento da abstinência do Nazareno.'},
+  {f:'a06',ref:'Romanos 12.1-2',t:'Apresentai os vossos corpos como sacrifício vivo, santo e agradável a Deus.',c:'Base bíblica para o testemunho e a vida santa.'},
+];
+const mL={a01:'Aula 01',a02:'Aula 02',a03:'Aula 03',a04:'Aula 04',a05:'Aula 05',a06:'Aula 06'};
+function renderVerses(filter){
+  const list=document.getElementById('verseList');list.innerHTML='';
+  verses.forEach(v=>{
+    if(filter!=='all'&&v.f!==filter)return;
+    const d=document.createElement('div');d.className='verse-card';
+    d.innerHTML=`<div class="vc-mod">${mL[v.f]}</div><div class="vc-ref">${v.ref}</div><div class="vc-text">${v.t}</div><div class="vc-ctx">${v.c}</div>`;
+    list.appendChild(d);
+  });
+}
+renderVerses('all');
+document.getElementById('verseFilter').addEventListener('click',e=>{
+  if(!e.target.classList.contains('vf-btn'))return;
+  document.querySelectorAll('.vf-btn').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  renderVerses(e.target.dataset.filter);
+});
 
-  function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='add')||(i===1&&tab==='search')));
-    document.getElementById('panel-add').classList.toggle('active', tab==='add');
-    document.getElementById('panel-search').classList.toggle('active', tab==='search');
-    if (tab==='search') renderList();
-  }
-
-  function toggleEye(id, btn) {
-    const inp = document.getElementById(id);
-    const show = inp.type === 'password';
-    inp.type = show ? 'text' : 'password';
-    btn.textContent = show ? '🙈' : '👁';
-  }
-
-  function checkStrength(val, barId, labelId) {
-    const bar = document.getElementById(barId);
-    const lbl = document.getElementById(labelId);
-    if (!val) { bar.style.width='0%'; lbl.textContent=''; return; }
-    let score = 0;
-    if (val.length >= 8) score++;
-    if (val.length >= 12) score++;
-    if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
-    if (/\d/.test(val)) score++;
-    if (/[^A-Za-z0-9]/.test(val)) score++;
-    const levels = [
-      { w:'20%', c:'#ff3b5c', t:'Muito fraca' },
-      { w:'40%', c:'#ff8800', t:'Fraca' },
-      { w:'60%', c:'#ffb300', t:'Razoável' },
-      { w:'80%', c:'#7ed321', t:'Forte' },
-      { w:'100%', c:'#00e5a0', t:'Muito forte' },
-    ];
-    const l = levels[Math.min(score,4)];
-    bar.style.width = l.w;
-    bar.style.background = l.c;
-    lbl.textContent = l.t;
-    lbl.style.color = l.c;
-  }
-
-  function generatePassword() {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*()_+-=[]{}';
-    let pwd = '';
-    for (let i=0; i<16; i++) pwd += chars[Math.floor(Math.random()*chars.length)];
-    const inp = document.getElementById('add-pwd');
-    inp.value = pwd;
-    inp.type = 'text';
-    document.querySelector('[onclick="toggleEye(\'add-pwd\',this)"]').textContent = '🙈';
-    checkStrength(pwd,'add-strength','add-strength-label');
-    toast('⚡ Senha gerada!');
-  }
-
-  function clearForm() {
-    ['add-site','add-url','add-login','add-pwd','add-note'].forEach(id => document.getElementById(id).value='');
-    document.getElementById('add-strength').style.width='0%';
-    document.getElementById('add-strength-label').textContent='';
-  }
-
-  function saveEntry() {
-    const site = document.getElementById('add-site').value.trim();
-    const login = document.getElementById('add-login').value.trim();
-    const pwd = document.getElementById('add-pwd').value;
-    if (!site || !login || !pwd) { toast('⚠ Site, login e senha são obrigatórios', true); return; }
-    entries.unshift({
-      id: Date.now(),
-      site,
-      url: document.getElementById('add-url').value.trim(),
-      login,
-      pwd,
-      note: document.getElementById('add-note').value.trim(),
-      created: new Date().toLocaleDateString('pt-BR')
-    });
-    save();
-    clearForm();
-    toast('✓ Entrada salva com sucesso!');
-  }
-
-  function renderList() {
-    const q = document.getElementById('search-input').value.toLowerCase();
-    const filtered = q ? entries.filter(e =>
-      e.site.toLowerCase().includes(q) ||
-      e.login.toLowerCase().includes(q) ||
-      (e.url || '').toLowerCase().includes(q) ||
-      (e.note || '').toLowerCase().includes(q)
-    ) : entries;
-
-    const list = document.getElementById('entries-list');
-    if (!filtered.length) {
-      list.innerHTML = `<div class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <div class="empty-text">${entries.length ? 'Nenhum resultado encontrado' : 'Nenhuma entrada salva ainda'}</div>
+// REFLEXÃO
+const qs=[
+  {id:'r1',mod:'Aula 01',q:'Você se lembra do momento em que compreendeu que era pecador e precisava de salvação? O que mudou em sua vida?'},
+  {id:'r2',mod:'Aula 01',q:'Das três coisas que acontecem na conversão (justificação, regeneração, adoção), qual tem mais significado pessoal para você?'},
+  {id:'r3',mod:'Aula 02',q:'Você reconhece em si tendências pecaminosas que persistem após a conversão? Como tem lidado com isso?'},
+  {id:'r4',mod:'Aula 02',q:'O que o batismo com o Espírito Santo significa para sua vida hoje? Você já buscou essa experiência com Deus?'},
+  {id:'r5',mod:'Aula 03',q:'Quem te levou a conhecer a Jesus? Como essa pessoa impactou sua caminhada?'},
+  {id:'r6',mod:'Aula 03',q:'Em qual aspecto do caráter de Cristo você sente mais necessidade de crescer?'},
+  {id:'r7',mod:'Aula 04',q:'Como está sua mordomia do tempo? Você tem um tempo regular com Deus? O que poderia melhorar?'},
+  {id:'r8',mod:'Aula 04',q:'O dízimo é um assunto prático na sua vida? O que te desafia nessa área?'},
+  {id:'r9',mod:'Aula 05',q:'A Igreja como "hospedaria" — você sente que ela tem sido lugar de segurança e cuidado para você?'},
+  {id:'r10',mod:'Aula 06',q:'Quais áreas do Pacto de Caráter Cristão representam maior desafio para o seu testemunho?'},
+];
+function renderReflections(){
+  const list=document.getElementById('reflectionList');list.innerHTML='';
+  qs.forEach(q=>{
+    const saved=localStorage.getItem('ref_'+q.id)||'';
+    const div=document.createElement('div');div.className='rc';
+    div.innerHTML=`<div class="rc-lbl">${q.mod}</div><div class="rc-q">${q.q}</div>
+      <textarea class="rc-ta" id="ta_${q.id}" placeholder="Escreva sua reflexão aqui...">${saved}</textarea>
+      <div style="display:flex;align-items:center;margin-top:8px">
+        <button class="rc-save" onclick="saveRef('${q.id}')">💾 Salvar</button>
+        <span class="rc-saved" id="sv_${q.id}">✓ Salvo!</span>
       </div>`;
-      return;
-    }
+    list.appendChild(div);
+  });
+}
+renderReflections();
+function saveRef(id){
+  localStorage.setItem('ref_'+id,document.getElementById('ta_'+id).value);
+  const sp=document.getElementById('sv_'+id);sp.classList.add('show');
+  setTimeout(()=>sp.classList.remove('show'),2000);
+}
 
-    list.innerHTML = filtered.map(e => `
-      <div class="entry-card" id="card-${e.id}" onclick="toggleCard(${e.id})">
-        <div class="entry-header">
-          <div class="entry-info">
-            <div class="entry-site">${escHtml(e.site)}</div>
-            <div class="entry-login">${escHtml(e.login)}</div>
-          </div>
-          <div class="entry-actions" onclick="event.stopPropagation()">
-            <button class="icon-btn copy" title="Copiar senha" onclick="copyPwd(${e.id})">📋</button>
-            <button class="icon-btn edit" title="Editar" onclick="openEdit(${e.id})">✏️</button>
-            <button class="icon-btn del" title="Excluir" onclick="deleteEntry(${e.id})">🗑</button>
-          </div>
-        </div>
-        <div class="entry-detail" id="detail-${e.id}">
-          <div class="detail-row">
-            <span class="detail-label">Login</span>
-            <span class="detail-val">${escHtml(e.login)}</span>
-            <div class="detail-actions">
-              <button class="mini-btn" onclick="copyText('${escAttr(e.login)}')">copiar</button>
-            </div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Senha</span>
-            <span class="detail-val masked" id="pwd-val-${e.id}">••••••••••••</span>
-            <div class="detail-actions">
-              <button class="mini-btn" id="show-btn-${e.id}" onclick="toggleShowPwd(${e.id},'${escAttr(e.pwd)}')">mostrar</button>
-              <button class="mini-btn" onclick="copyText('${escAttr(e.pwd)}')">copiar</button>
-            </div>
-          </div>
-          ${e.url ? `<div class="detail-row">
-            <span class="detail-label">URL</span>
-            <a class="detail-val" href="${escHtml(e.url)}" target="_blank" style="color:var(--accent2);text-decoration:none">${escHtml(e.url)}</a>
-          </div>` : ''}
-          ${e.note ? `<div class="detail-row">
-            <span class="detail-label">Nota</span>
-            <span class="detail-val" style="color:var(--text-dim)">${escHtml(e.note)}</span>
-          </div>` : ''}
-          <div class="detail-row">
-            <span class="detail-label">Data</span>
-            <span class="detail-val" style="color:var(--text-dim)">${e.created||''}</span>
-          </div>
-        </div>
+const quizModules=[
+{id:'m1',label:'Aula 01',title:'A Obra de Cristo por Nós',questions:[
+{q:'O que é o Pecado Adâmico?',o:['Um pecado cometido conscientemente','A tendência pecaminosa com que nascemos','Um pecado específico de Adão','Pecado contra o Espírito Santo'],a:1,e:'O pecado adâmico é a influência e tendência pecaminosa que atuam em nós desde o nascimento — ninguém ensina uma criança a mentir ou ser egoísta.'},
+{q:'O que é o Pecado Voluntário?',o:['A tendência herdada do pecado original','Um pecado por ignorância','Quando pecamos por escolha consciente e deliberada','Pecado que não tem perdão'],a:2,e:'No pecado voluntário a culpa não é de Adão nem do Diabo. Somos nós que fazemos isso de maneira voluntária.'},
+{q:'Segundo Romanos 6.23, qual é o salário do pecado?',o:['Tristeza','Doença','Pobreza','A morte'],a:3,e:'Romanos 6.23: "O salário do pecado é a morte" — separação eterna de Deus.'},
+{q:'O que Isaías 59.1-2 ensina sobre o pecado?',o:['O pecado pode ser ignorado','O pecado faz separação entre Deus e o homem','O pecado é natural','Deus aceita o pecado por amor'],a:1,e:'Isaías 59.1-2: o pecado faz separação entre Deus e o homem.'},
+{q:'Nossas obras de justiça própria são comparadas a quê em Isaías 64.6?',o:['Ouro puro','Trapos de imundícia','Pedras preciosas','Frutos do campo'],a:1,e:'Nossas obras de justiça própria para Deus são como trapos de imundícia — não podemos nos justificar por obras.'},
+{q:'Por que a Aula 01 começa pelo tema do pecado?',o:['Para causar medo','Para mostrar superioridade moral','Para que valorizemos a salvação compreendendo o que fomos salvos','Tradição protestante'],a:2,e:'Se não sabemos do que fomos salvos e não sabemos o preço pago, corremos o risco de não valorizar nossa salvação.'},
+{q:'Três coisas acontecem simultaneamente na conversão. Quais são?',o:['Fé, esperança e amor','Batismo, ceia e oração','Justificação, Regeneração e Adoção','Arrependimento, confissão e penitência'],a:2,e:'Tito 3.4-7 descreve as três obras simultâneas: justificação (absolvição), regeneração (nova natureza) e adoção (filhos de Deus).'},
+{q:'"Justificado" significa:',o:['Santificado','Absolvido','Batizado com o Espírito','Livre de tentações'],a:1,e:'Justificação significa ser absolvido no tribunal de Deus. Cristo foi nosso Advogado (1 Jo 2.1) e cumpriu a sentença em nosso lugar.'},
+{q:'Quem é o nosso Advogado diante do Justo Juiz?',o:['O Espírito Santo','Pedro','Jesus Cristo (1 Jo 2.1)','O pastor'],a:2,e:'Jesus Cristo é nosso Advogado em 1 João 2.1, que se apresenta diante do Justo Juiz e declara que já cumpriu a sentença.'},
+{q:'O que significa Regeneração segundo a Aula 01?',o:['Apenas uma nova chance','Nascer de novo, recebendo uma nova natureza (nova semente)','Ser rebatizado','Frequentar a Igreja'],a:1,e:'Regeneração (2 Co 5.17) — nascer de novo, nova natureza em nós para produzir novos e bons frutos.'},
+{q:'O que significa a Adoção na conversão?',o:['Ser parente distante de Deus','Ser filho de Deus com acesso ao Pai e herança','Apenas perdão dos pecados','Ser membro da Igreja'],a:1,e:'João 1.12 — Adoção: somos aceitos como filhos! Acesso ao Pai, lugar à mesa e herança.'},
+{q:'O que Jesus fez com nossa dívida espiritual segundo Colossenses 2.13-14?',o:['Adiou o pagamento','Dividiu a dívida','Cancelou o escrito de dívida, cravando-o na cruz','Nos deu tempo para pagar'],a:2,e:'Colossenses 2.13-14: Jesus cancelou o escrito de dívida contra nós, removendo-o inteiramente ao cravá-lo na cruz.'},
+{q:'Segundo João 3.36, o que acontece com quem se mantém rebelde contra o Filho?',o:['Recebe segunda chance','Sobre ele permanece a ira de Deus','É ignorado por Deus','Será salvo no final'],a:1,e:'João 3.36: "quem se mantém rebelde contra o Filho não verá a vida, mas sobre ele permanece a ira de Deus."'},
+{q:'O cálice da ira de Deus foi derramado sobre quem?',o:['A humanidade','Adão e Eva','Jesus, para que nEle encontremos salvação','O Diabo'],a:2,e:'O cálice da ira de Deus foi derramado sobre Jesus para que nele possamos encontrar salvação. Jesus assumiu nosso lugar.'},
+{q:'De que somos salvos ao sermos justificados pelo sangue de Cristo (Rm 5.9)?',o:['Da pobreza','Da ira de Deus','Das doenças','Das consequências nesta vida'],a:1,e:'Romanos 5.9: "sendo justificados pelo seu sangue, seremos por ele salvos da ira" — somos salvos da ira de Deus.'},
+{q:'O Espírito Santo convence do pecado (Jo 16.8), mas quem precisa se arrepender?',o:['O Espírito age automaticamente','Somos nós que nos arrependemos voluntariamente','O pastor intercede','A comunidade ora e acontece'],a:1,e:'Quem convence é o Espírito Santo, mas sou eu que me arrependo. Nossa responsabilidade não é eliminada.'},
+{q:'Se confessarmos nossos pecados, Deus é fiel e justo para (1 Jo 1.9):',o:['Nos dar penitências','Nos perdoar e nos purificar de toda injustiça','Nos livrar de problemas','Nos conceder prosperidade'],a:1,e:'1 João 1.9: "Se confessarmos os nossos pecados, ele é fiel e justo para nos perdoar os pecados e nos purificar de toda injustiça."'},
+{q:'Segundo Tito 3.4-7, qual é a base da nossa salvação?',o:['Nossas boas obras','A misericórdia de Deus e o lavar regenerador do Espírito Santo','Nossa obediência à Lei','Nossa fidelidade ao dízimo'],a:1,e:'Tito 3.4-7: Deus nos salvou não por obras praticadas por nós, mas segundo a sua misericórdia, pelo lavar regenerador do Espírito Santo.'},
+{q:'Ao sermos adotados, como somos aceitos na família divina?',o:['Como parentes distantes','Como enteados','Como agregados','Como filhos plenos com acesso ao Pai'],a:3,e:'Somos aceitos como filhos — não como parentes distantes. Acesso ao Pai, lugar à mesa e herança!'},
+{q:'O que Romanos 5.12 ensina?',o:['O pecado afeta apenas os conscientemente pecadores','O pecado é um problema que afeta toda a humanidade','Os justos são livres do pecado adâmico','O pecado será eliminado nesta vida'],a:1,e:'Romanos 5.12: o pecado é um problema universal — afeta toda a humanidade.'},
+{q:'Qual versículo descreve a Justificação com a expressão "paz com Deus"?',o:['Romanos 3.23','Romanos 5.1','João 3.36','Tito 3.5'],a:1,e:'Romanos 5.1: "Tendo sido justificados pela fé, temos paz com Deus por meio de nosso Senhor Jesus Cristo."'},
+{q:'Por que tipo de semente fomos regenerados (1 Pe 1.23)?',o:['Semente corruptível','Semente da tradição dos pais','Semente incorruptível, mediante a palavra de Deus','Semente do arrependimento humano'],a:2,e:'1 Pedro 1.23: "vocês foram regenerados não de semente corruptível, mas de semente incorruptível mediante a palavra de Deus."'},
+{q:'Quando estamos em Cristo, como Deus olha para nós?',o:['Vê nossos pecados e os perdoa um a um','Ignora nossos pecados','Não vê mais nossos pecados, mas a Justiça de Cristo','Espera que melhoremos'],a:2,e:'Quando estamos em Cristo, Deus não vê mais nossos pecados, mas a Justiça de Cristo!'},
+{q:'Quais são os dois tipos de pecado da Aula 01?',o:['Pecado mortal e venial','Pecado adâmico e voluntário','Pecado de ação e omissão','Pecado consciente e inconsciente'],a:1,e:'A Aula 01 apresenta: Pecado Adâmico (tendência herdada) e Pecado Voluntário (ato consciente e deliberado).'},
+{q:'O que "trapos de imundícia" em Isaías 64.6 significa em termos de salvação?',o:['Precisamos melhorar nossas obras','Nossas obras de justiça própria são insuficientes para nos justificar diante de Deus','Devemos abandonar as boas obras','As obras só valem após o batismo'],a:1,e:'Isaías 64.6: as obras de justiça própria são insuficientes. A salvação vem pela graça, não por obras.'},
+{q:'Qual é o principal propósito de começar o curso com o tema do pecado?',o:['Mostrar que somos piores que outros','Criar culpa permanente','Fundamentar o entendimento da salvação, valorizando o preço pago','Impor regras morais'],a:2,e:'Boa base sobre o pecado nos fundamenta para entender a salvação e valorizar o que Cristo fez por nós.'},
+{q:'Qual frase resume a Justificação?',o:['Salvo por obras','Absolvido — Cristo pagou nossa dívida','Devo trabalhar para manter a salvação','Deus me aceita quando eu melhorar'],a:1,e:'Justificação = ser absolvido. Cristo pagou — somos declarados inocentes diante do tribunal divino.'},
+{q:'O que acontece quando Deus nos adota como filhos?',o:['Acesso limitado à presença de Deus','Tornamo-nos servos privilegiados','Temos acesso ao Pai, lugar à mesa e herança plena','Ganhamos o direito de não sofrer mais'],a:2,e:'João 1.12 — ser filho é ter acesso ao Pai, lugar à mesa e herança. Deus é um pai próximo e maravilhoso!'},
+{q:'Qual referência confirma que "a vida de todas as criaturas está na mão de Deus"?',o:['Romanos 8.29','Jó 12.10','Salmos 23.1','João 1.12'],a:1,e:'Jó 12.10: "A vida de todas as criaturas está na mão de Deus; é ele quem mantém todas as pessoas com vida."'},
+{q:'Qual versículo fundamenta a Adoção como filhos de Deus?',o:['Romanos 5.1','2 Coríntios 5.17','João 1.12','Tito 3.5'],a:2,e:'João 1.12: "a todos os que o receberam, aos que creem em seu nome, deu-lhes o direito de se tornarem filhos de Deus."'},
+]},
+{id:'m2',label:'Aula 02',title:'A Obra do Espírito Santo em Nós',questions:[
+{q:'Qual evento do Êxodo 12 introduz a Aula 02?',o:['Travessia do Mar Vermelho','A Páscoa — sangue do cordeiro protegia as casas','Entrega das tábuas da Lei','Construção do tabernáculo'],a:1,e:'Páscoa (Êxodo 12): onde havia o sangue do cordeiro nos batentes, o anjo da morte não entrava. O sangue do Cordeiro (Jesus) nos cobre hoje.'},
+{q:'Qual obra adicional Deus quis fazer no povo após tirá-los do Egito?',o:['Dar a Terra imediatamente','Tirar o Egito de dentro do povo','Torná-los guerreiros','Ensinar a Lei'],a:1,e:'Depois de tirar o povo do Egito, Deus quis tirar o Egito de dentro do povo — o mundo ainda influenciava o coração deles.'},
+{q:'O que representa espiritualmente "tirar o Egito de dentro do povo"?',o:['Obedecer às leis do AT','A obra do Espírito de purificar o coração e tirar o mundanismo de dentro de nós','Participar de todos os cultos','Abandonar hábitos alimentares'],a:1,e:'Não basta sairmos do mundo — o mundo precisa sair de nós. Deus deseja tirar o mundo de nossos corações.'},
+{q:'O que é a "crise no coração" descrita na Aula 02?',o:['Crise de saúde espiritual','A percepção de que, mesmo convertido, a tendência ao pecado persiste','Dúvida sobre Deus','Conflito com líderes'],a:1,e:'Quando nos convertemos percebemos que a tendência para o pecado e o mundanismo persistem em nossos corações.'},
+{q:'Mateus 3.11 fala sobre dois tipos de batismo. Quais são?',o:['Batismo nas águas e de fogo do juízo','Batismo em água e com o Espírito Santo','Batismo no nome do Pai e do Filho','Batismo de arrependimento e santidade'],a:1,e:'Mateus 3.11: João batiza com água, mas Jesus "batizará com o Espírito Santo e com fogo."'},
+{q:'O que acontece no batismo com o Espírito Santo?',o:['O crente nunca mais peca','O coração é liberto do poder do pecado e trazido a inteira devoção a Deus','O crente recebe línguas imediatamente','O crente é dispensado dos cultos'],a:1,e:'No batismo com o Espírito: coração liberto do poder do pecado e trazido a inteira devoção a Deus.'},
+{q:'Qual é a evidência interna do batismo com o Espírito Santo?',o:['Falar em línguas','Ter visões','A purificação do coração (At 15.7-9)','Realizar milagres'],a:2,e:'Atos 15.7-9 — Pedro aponta a purificação do coração como evidência interna.'},
+{q:'Qual é a evidência externa do batismo com o Espírito Santo?',o:['Línguas e profecias','O Fruto do Espírito (Gálatas 5.22-23)','Curas e milagres','Evangelização constante'],a:1,e:'A evidência externa é o Fruto do Espírito (Gálatas 5.22-23): amor, alegria, paz, paciência...'},
+{q:'O que a analogia do alpinista ilustra sobre a vida santificada?',o:['Sobe para buscar Deus','O santificado tem poder para não cair e para subir cada vez mais','Representa os líderes','Se cansa e precisa descansar'],a:1,e:'O santificado tem poder para não cair em pecado e para viver cada vez mais próximo de Deus.'},
+{q:'O batismo com o Espírito Santo significa perfeição absoluta?',o:['Sim, nunca mais peca','Não — significa que agora pode não pecar e deve crescer na graça','Sim, mas apenas em pensamento','Não, precisará se rebatizar'],a:1,e:'Não significa perfeição absoluta. Significa que agora você pode não pecar e deve crescer na graça e amadurecer cada dia mais.'},
+{q:'Qual é o 1º passo para receber o batismo com o Espírito Santo?',o:['Jejum de 40 dias','Certeza de que os pecados foram perdoados e andamos na luz','Falar em línguas primeiro','Ser rebatizado'],a:1,e:'Passo 1: O batismo só ocorre após a regeneração. Precisamos ter certeza de que os pecados foram perdoados e andamos na luz.'},
+{q:'Qual é o 2º passo?',o:['Memorizar os frutos do Espírito','Reconhecer a tendência pecaminosa e desejar intensamente ser liberto','Participar de retiro','Receber imposição de mãos'],a:1,e:'Passo 2: Reconhecer essa tendência e desejar sincera e intensamente ser liberto — deve haver desejo real de viver livre do pecado.'},
+{q:'Qual é o 3º passo?',o:['Entender que não há poder suficiente em nós, mas Deus tem a solução em Cristo','Humilhar-se diante da congregação','Declarar santidade publicamente','Abandonar relacionamentos do passado'],a:0,e:'Passo 3: Entender que em nós não há poder suficiente para vencer o pecado, porém crer que Deus tem a solução através de Cristo e do Espírito.'},
+{q:'Qual é o 4º passo?',o:['Obras de caridade','Ler a Bíblia completa','Entregar-se totalmente a Deus — disposto a sempre fazer a vontade dEle','Confiar nas próprias forças'],a:2,e:'Passo 4: Entregar a Deus todo o nosso passado, presente e futuro; nossa vontade, sonhos, paixões e desejos.'},
+{q:'Qual é o 5º passo?',o:['Buscar a Deus em oração e com fé, ansiando pelo batismo','Confiar que acontecerá automaticamente','Esperar passivamente','Pedir ao pastor uma vez'],a:0,e:'Passo 5: Buscar com fé — não apenas pedimos, cremos e nos consagramos para Deus.'},
+{q:'Em Atos 1.3-9, o que Jesus disse antes de subir aos céus?',o:['Que batizassem imediatamente todos','Que esperassem em Jerusalém até receberem o Espírito Santo','Que o Espírito já havia sido dado','Que só os apóstolos precisavam do Espírito'],a:1,e:'Atos 1.3-9: Jesus disse aos discípulos que esperassem em Jerusalém até receberem o Espírito Santo.'},
+{q:'Por que Pedro e João foram a Samaria (At 8.14-17)?',o:['Para resolver conflitos','Para rebatizá-los nas águas','Para orar para que recebessem o Espírito Santo','Para corrigir falsos ensinamentos'],a:2,e:'Atos 8.14-17: Pedro e João foram orar para que os crentes de Samaria recebessem o Espírito Santo.'},
+{q:'Por que Deus enviou Ananias a Saulo (At 9.17)?',o:['Para convertê-lo','Para batizá-lo','Para orar por ele para que fosse cheio do Espírito Santo','Para convidá-lo como apóstolo'],a:2,e:'Atos 9.17: Deus enviou Ananias para orar por Saulo para que ele fosse cheio do Espírito Santo.'},
+{q:'Qual foi a primeira pergunta de Paulo aos discípulos em Éfeso (At 19.1-6)?',o:['Se leram as cartas dos apóstolos','Se já haviam recebido o Espírito Santo','Se conheciam o batismo de João','Se obedeciam às leis'],a:1,e:'Atos 19.1-6: Paulo perguntou: "Vocês receberam o Espírito Santo quando creram?" — mostrando que era questão central.'},
+{q:'O que a parábola do jovem que quer um carro ilustra sobre buscar o batismo?',o:['Devemos esperar passivamente','Devemos buscar com desejo intenso e persistente','Basta pedir uma vez','Depende de maturidade'],a:1,e:'Quem realmente quer algo não pede uma vez — insiste, pesquisa, age. Assim devemos buscar o batismo com o Espírito.'},
+{q:'O que o "Egito dentro do povo" representa hoje?',o:['Tentações vindas de fora','Tendências mundanas que persistem no coração após a conversão','Pecados do passado perdoados','Problemas financeiros'],a:1,e:'Representa a predisposição herdada do pecado que permanece em conflito dentro de nós após a conversão.'},
+{q:'Qual frustração a crise no coração gera no crente?',o:['Por que Deus não cura minha doença?','Por que não consigo vencer o pecado? Por que essas inclinações permanecem tão fortes?','Por que não tenho prosperidade?','Por que a Igreja não cresce?'],a:1,e:'O pecado herdado continua lá, gerando frustração: "por que não consigo vencer o pecado? Por que essas inclinações permanecem tão fortes?"'},
+{q:'O que significa "inteira devoção a Deus" no batismo com o Espírito?',o:['Dedicar algumas horas a Deus','Ter o coração completamente voltado e consagrado a Deus, sem divisões','Ser líder em todos os ministérios','Ler a Bíblia em um ano'],a:1,e:'No batismo com o Espírito, nosso coração é trazido a inteira devoção a Deus — consagração total, sem divisões.'},
+{q:'Qual passagem de Números relata o saudosismo do povo pelo Egito?',o:['Números 5.1','Números 13.31','Números 11.4','Números 20.1'],a:2,e:'Números 11.4: O povo sentia saudades da comida do Egito. O Egito ainda influenciava o coração de Israel.'},
+{q:'Qual passagem de Números mostra a falta de fé em tomar a Terra?',o:['Números 11.4','Números 13.31','Números 20.1','Números 35.9'],a:1,e:'Números 13.31: o povo não acreditava ser possível tomar a Terra por olharem apenas para sua força limitada.'},
+{q:'Quando buscamos o batismo com fé, o que isso implica além de pedir?',o:['Apenas esperar quieto','Não apenas pedimos — cremos e nos consagramos para Deus','Repetir a oração muitas vezes','Fazer lista de pecados'],a:1,e:'"Eu desejo tanto a Deus que eu me consagro, me separo e me dedico a Deus." Fé ativa, não passiva.'},
+{q:'O crescimento após a santificação depende de quê?',o:['Apenas das orações do pastor','De permanecer em consagração, oração, Palavra, comunhão e guia do Espírito','Apenas de não cometer pecados graves','De trabalhar em tempo integral para a Igreja'],a:1,e:'O crescimento ocorre quando permaneço em consagração, buscando a Deus, orando, lendo a Palavra, participando da comunhão, sendo guiado pelo Espírito.'},
+{q:'O que Atos 1.8 promete aos que recebem o Espírito Santo?',o:['Riquezas','Poder para ser testemunha até os confins da terra','Proteção contra doenças','Libertação de todos os problemas'],a:1,e:'Atos 1.8: "receberão poder quando o Espírito Santo descer sobre vocês; e serão minhas testemunhas... até os confins da terra."'},
+{q:'O que Hebreus 10.4 afirma sobre o sangue de animais?',o:['Providencia redenção temporal','É impossível que o sangue de touros e bodes tire pecados','Satisfaz as exigências do templo','Substitui a oração'],a:1,e:'Hebreus 10.4: "Porque é impossível que o sangue de touros e de bodes tire pecados." Os sacrifícios apontavam para Cristo.'},
+{q:'O que João 16.13 diz sobre o Espírito Santo na Igreja?',o:['O Espírito fala por conta própria','O Espírito nos guiará em toda a verdade, não falará de si mesmo, dirá o que tiver ouvido','O Espírito substituirá Jesus','O Espírito só fala no fim dos tempos'],a:1,e:'João 16.13: "nos guiará em toda a verdade, não falará de si mesmo, mas dirá tudo o que tiver ouvido, e vos anunciará o que há de vir."'},
+]},
+{id:'m3',label:'Aula 03',title:'Discipulado e Propósito',questions:[
+{q:'Qual versículo contém a Grande Comissão da Aula 03?',o:['João 3.16','Romanos 8.29','Mateus 28.19-20','1 Coríntios 11.1'],a:2,e:'Mateus 28.19-20: "Toda a autoridade me foi dada no céu e na terra. Portanto, vão e façam discípulos de todas as nações..."'},
+{q:'Qual é o verdadeiro alvo do discipulado?',o:['Ser um membro melhor','Ter mais dons espirituais','Ser semelhante a Jesus em caráter e poder','Conhecer toda a teologia'],a:2,e:'Romanos 8.29 — o alvo é ser conformes à imagem do Filho de Deus. SER SEMELHANTE A JESUS.'},
+{q:'O que Paulo diz em 1 Coríntios 11.1 sobre o discipulado?',o:['Sigam a Igreja','Sejam meus imitadores, como eu sou imitador de Cristo','Obedeçam aos líderes','Busquem os dons'],a:1,e:'1 Coríntios 11.1: "Sejam meus imitadores, como também eu sou imitador de Cristo." O modelo é imitar Cristo.'},
+{q:'Qual é o perigo de viver anos na Igreja sem conhecer o propósito de Deus?',o:['Perder a fé','Vaguear sem direção, nunca alcançando o alvo real de ser semelhante a Jesus','Tornar-se falso profeta','Perder a salvação'],a:1,e:'Muitos vivem anos na Igreja sem conhecer o verdadeiro propósito de Deus. Sem alvo claro fazemos muito esforço para nada.'},
+{q:'Ser semelhante a Jesus no CARÁTER inclui:',o:['Realizar milagres','Ser obediente, submisso, fiel, perdoador, manso e cheio de misericórdia','Pregar para multidões','Ter visões'],a:1,e:'Ser semelhante a Ele no Caráter: obediente, submisso, fiel, perdoador, manso, cheio de misericórdia.'},
+{q:'Ser semelhante a Jesus no PODER inclui:',o:['Sucesso nos negócios','Expulsar demônios, curar enfermos, ter discernimento, sinais e prodígios','Conquistar posições de liderança','Acumular conhecimento teológico'],a:1,e:'Ser semelhante a Ele no Poder: expulsar demônios, curar enfermos, ter discernimento de espíritos, sinais e prodígios.'},
+{q:'Para qual propósito tudo foi criado segundo Colossenses 1.16?',o:['Para o prazer humano','Para a glória dos anjos','Por meio de Cristo e para Ele','Para equilibrar a natureza'],a:2,e:'Colossenses 1.16: "Pois nele foram criadas todas as coisas... Tudo foi criado por meio dele e para ele."'},
+{q:'Por que é um erro buscar o propósito de vida em nós mesmos?',o:['Porque somos muito humildes','A Bíblia proíbe o autoconhecimento','Porque concentrarmo-nos em nós mesmos jamais desvendará o propósito que vem do Criador','Os outros deveriam nos dizer'],a:2,e:'Somente o criador ou o manual do fabricante poderá mostrar sua utilidade. O propósito vem de Deus.'},
+{q:'Como a Bíblia é descrita na Aula 03 como fonte de propósito?',o:['Um mapa do tesouro','O Manual do proprietário — que explica por que estamos vivos','Um código de leis morais','Um livro de autoajuda'],a:1,e:'A Bíblia é o nosso "Manual do proprietário", que explica por que estamos vivos, como a vida funciona, o que evitar e o que esperar do futuro.'},
+{q:'Qual é a 1ª das três descobertas sobre o propósito?',o:['O propósito é encontrado no sucesso','Você descobre identidade e propósito em relacionamento com Jesus Cristo','O propósito é revelado pelos dons naturais','O propósito é definido pela família'],a:1,e:'1ª descoberta: Você descobre sua identidade e propósito através de um relacionamento com Jesus Cristo.'},
+{q:'Qual é a 2ª das três descobertas sobre o propósito?',o:['O propósito é escolhido ao longo da vida','Deus já pensava a seu respeito antes de você existir — o propósito é anterior à sua concepção','O propósito muda nas fases da vida','Depende de suas conquistas'],a:1,e:'2ª descoberta: Deus já pensava a seu respeito muito antes de você existir. O propósito é anterior à sua concepção.'},
+{q:'Qual é a 3ª das três descobertas sobre o propósito?',o:['O propósito individual é o maior','O propósito da sua vida cabe em um propósito muito maior e cósmico, planejado por Deus para a eternidade','O propósito muda após grandes erros','Descoberto pelo horóscopo'],a:1,e:'3ª descoberta: O propósito da sua vida cabe em um propósito muito maior e cósmico, que Deus planejou para a eternidade.'},
+{q:'Jó 12.10 ensina que:',o:['O sofrimento revela o propósito','A vida de todas as criaturas está na mão de Deus — é Ele quem mantém todas as pessoas com vida','O propósito é descoberto no sofrimento','Deus abandona os que pecam'],a:1,e:'Jó 12.10: "A vida de todas as criaturas está na mão de Deus; é ele quem mantém todas as pessoas com vida."'},
+{q:'O que Romanos 8.29 revela sobre o propósito eterno de Deus?',o:['Que seremos ricos e prósperos','Que seremos conformes à imagem do Filho de Deus','Que seremos líderes espirituais','Que não sofreremos mais'],a:1,e:'Romanos 8.29: "predestinou para serem conformes à imagem de seu Filho." Esse é o propósito eterno de Deus para nós.'},
+{q:'Em quais dois sentidos vivemos o propósito de Deus?',o:['Prosperidade e saúde','Sendo filhos à semelhança de Jesus e tornando-nos cooperadores de Deus','Sucesso e reconhecimento','Paz e alegria apenas'],a:1,e:'Vivemos o propósito em dois sentidos: sendo filhos à semelhança de Jesus e tornando-nos cooperadores de Deus no Seu propósito.'},
+{q:'Por que muitos não encontram o propósito de vida?',o:['Deus esconde dos indignos','Normalmente começamos pelo lado errado — nós mesmos — em vez de Deus','O propósito não existe para todos','Precisam ser pastores'],a:1,e:'Isso porque normalmente começamos pelo lado errado — nós mesmos. O ponto de partida deve ser Deus.'},
+{q:'Qual é o erro de "usar Deus para a auto-realização"?',o:['É um erro menor','É contrário à natureza e fadado ao fracasso, pois fomos feitos por Deus e para Deus','É correto com boas intenções','É apenas questão de prioridades'],a:1,e:'Muitas pessoas tentam usar Deus para a auto-realização, mas isso é contrário à natureza e está fadado ao fracasso.'},
+{q:'Qual é a diferença entre propósito de vida e carreira?',o:['São a mesma coisa','A carreira é mais importante','Você pode escolher a carreira, mas não pode escolher o propósito — Deus o determinou antes de você existir','O propósito é irrelevante para a carreira'],a:2,e:'Você pode escolher sua carreira, cônjuge e passatempos, mas não pode escolher seu propósito. Ele foi determinado por Deus antes de você existir.'},
+{q:'Qual é a fonte correta para descobrir o propósito de vida?',o:['Filósofos e psicólogos','Signos e horóscopo','A Palavra de Deus — a revelação de Deus sobre a vida','Testes vocacionais'],a:2,e:'A opção certa é através da revelação: Deus nos revelou sobre a vida em Sua Palavra. A Bíblia é o manual do proprietário.'},
+{q:'Qual é a vocação do cristão em síntese?',o:['Servir na Igreja em tempo integral','Ser semelhante a Jesus e cooperador de Deus para levar outros a esse propósito','Conquistar carreira de sucesso','Memorizar a Bíblia'],a:1,e:'Vocação: ser filhos à semelhança de Jesus e tornando-nos cooperadores de Deus no cumprimento de Seu propósito.'},
+{q:'Por que você deve começar com Deus ao buscar o propósito?',o:['Deus pune quem não O consulta','Porque você só existe porque Deus deseja que você exista','Tradição religiosa','Os pastores dizem isso'],a:1,e:'Você deve começar com Deus, seu Criador. Você só existe porque Deus deseja que você exista. Você foi feito por Deus e para Deus.'},
+{q:'O que a Aula 03 diz sobre quem vive anos na Igreja sem conhecer o propósito?',o:['São mais espirituais pela humildade','Muitos vivem anos na Igreja sem conhecer o verdadeiro propósito de Deus','Irão descobrir eventualmente','Precisam ser rebatizados'],a:1,e:'Muitos vivem anos na Igreja sem conhecer o verdadeiro propósito de Deus. O alvo não é apenas ser membro melhor — é ser semelhante a Jesus.'},
+{q:'Qual passagem menciona "ser imitadores de Cristo"?',o:['Romanos 12.1','Gálatas 5.22','1 Coríntios 11.1','Colossenses 3.1'],a:2,e:'1 Coríntios 11.1: "Sejam meus imitadores, como também eu sou imitador de Cristo."'},
+{q:'Sobre o que você deve edificar sua vida segundo a Aula 03?',o:['Família e tradição','Psicologia popular','Verdades eternas, não psicologia popular ou estímulos para o sucesso','Conselhos de pessoas sábias'],a:2,e:'Você deve edificar sua vida sobre verdades eternas, e não sobre psicologia popular, histórias inspiradoras ou estímulos para alcançar o sucesso.'},
+{q:'De onde vem o propósito específico da vida?',o:['De dentro de nós por meditação','Não pode ser encontrado em nós mesmos — somente em Deus, revelado em Sua Palavra','É revelado pelos dons','É igual para todos os cristãos'],a:1,e:'O propósito específico da nossa vida não pode ser encontrado em nós mesmos, mas somente em Deus. A Palavra de Deus é que nos revela o sentido de todas as coisas.'},
+{q:'Que perguntas erradas muitos fazem ao buscar o propósito?',o:['"Qual é a vontade de Deus?"','"O que eu quero ser? O que devo fazer? Quais são meus objetivos?"','"O que a Bíblia diz sobre meu futuro?"','"Como posso servir melhor à Igreja?"'],a:1,e:'Fazemos perguntas voltadas para nós mesmos. Esse foco em nós é o caminho errado — o propósito é encontrado em Deus.'},
+{q:'O que é ser "cooperador de Deus" no contexto do propósito?',o:['Ajudar financeiramente com dízimos','Participar do propósito de Deus levando outros a entrarem nesse mesmo propósito','Construir templos','Ser missionário internacional'],a:1,e:'Tornando-nos cooperadores de Deus no cumprimento de Seu propósito, levando outros a entrarem neste mesmo propósito.'},
+{q:'Qual versículo de Jó confirma que a vida está completamente nas mãos de Deus?',o:['Jó 1.21','Jó 12.10','Jó 23.10','Jó 38.4'],a:1,e:'Jó 12.10: "A vida de todas as criaturas está na mão de Deus; é ele quem mantém todas as pessoas com vida."'},
+{q:'Por que o discipulado foca em ser semelhante a Jesus e não apenas em fazer coisas?',o:['Fazer coisas é pecado','O ser precede o fazer — o caráter transformado é a base de toda ação cristã significativa','As ações não têm valor','Jesus não pediu para fazermos nada'],a:1,e:'O alvo não é fazer um membro melhor ou líder maduro. O verdadeiro alvo é ser conformes à imagem de Jesus — Rm 8.29.'},
+{q:'Por que "usar Deus para a auto-realização" está fadado ao fracasso?',o:['É um erro menor','É contrário à natureza — fomos feitos por Deus e para Deus, não o contrário','É correto com boas intenções','É questão de prioridades'],a:1,e:'Viver é deixar Deus usá-lo para Seus propósitos — não usar a Deus para o que deseja. Isso é contrário à natureza.'},
+]},
+{id:'m4',label:'Aula 04',title:'Mordomia Cristã',questions:[
+{q:'O que é um mordomo segundo a Aula 04?',o:['Um servo do governo','Alguém que gerencia algo que pertence a outra pessoa','O tesoureiro da Igreja','Um líder de ministério'],a:1,e:'Mordomo é aquele que gerencia algo que pertence a outra pessoa, que confiou aquilo aos seus cuidados.'},
+{q:'O que a mordomia cristã abrange?',o:['Apenas o dinheiro','Apenas o tempo de culto','Nosso tempo, recursos e relacionamentos','Apenas os dons espirituais'],a:2,e:'A mordomia cristã é gerenciar aquilo que Deus confiou a nós — como nosso tempo, recursos e relacionamentos — para que o nome dEle seja glorificado.'},
+{q:'Segundo 1 Coríntios 6.19-20, somos donos de nossos próprios corpos?',o:['Sim, o corpo é nossa propriedade','Não — fomos comprados por preço e o corpo é santuário do Espírito Santo','Apenas parcialmente','Sim, mas com moderação'],a:1,e:'1 Coríntios 6.19-20: "o corpo de vocês é santuário do Espírito Santo... vocês não pertencem a vocês mesmos? Porque vocês foram comprados por preço."'},
+{q:'Qual estratégia do Faraó (Êx 5.7-9) o Diabo ainda usa hoje?',o:['Usar doenças para distrair','Tomar nosso tempo sobrecarregando ou distraindo','Criar divisões na família','Atacar a saúde financeira'],a:1,e:'A mesma estratégia que Faraó usou para parar Israel: tomar o nosso tempo, seja nos sobrecarregando ou nos distraindo.'},
+{q:'O que é vida devocional?',o:['Ir à Igreja nos fins de semana','Ter um relacionamento diário com Deus, meditando na Palavra e orando','Participar de todos os grupos','Assistir pregações pela internet'],a:1,e:'Vida devocional significa ter um relacionamento diário com Deus, meditando na Palavra e orando. É a Palavra que nos traz direção — Salmos 119.105.'},
+{q:'Oséias 4.6 diz que o povo está sendo destruído porque:',o:['Não dão dízimos','Lhe falta o conhecimento da Palavra de Deus','Não participam dos cultos','Não evangelizam'],a:1,e:'Oséias 4.6: "O meu povo está sendo destruído, pois lhe falta o conhecimento." Muitas vezes sofremos por não conhecer e obedecer a Palavra de Deus.'},
+{q:'Para que serve toda a Escritura segundo 2 Timóteo 3.16-17?',o:['Apenas para ensino doutrinário','Para entretenimento espiritual','Para o ensino, repreensão, correção e educação na justiça','Apenas para líderes e pastores'],a:2,e:'2 Timóteo 3.16-17: Toda a Escritura é inspirada por Deus e útil para o ensino, repreensão, correção e educação na justiça.'},
+{q:'Qual era a intenção de Jesus ao dar o modelo de oração em Mateus 6.9-15?',o:['Ensinar uma reza para repetir mecanicamente','Deixar um exemplo de como orar com elementos que devem estar em nossa vida de oração','Criar um ritual obrigatório','Substituir a oração individual por coletiva'],a:1,e:'A ideia de Jesus não era ensinar uma reza, mas um exemplo de como orar e de elementos que devem estar presentes em nossa vida de oração.'},
+{q:'O que "nosso" na oração modelo ensina?',o:['Que Deus é apenas para cristãos','Você faz parte de uma família maior, com outros irmãos','Que a oração deve ser feita em grupo','Que Deus pertence a nós'],a:1,e:'"Nosso": Você faz parte de uma família maior, com outros irmãos! A oração nos conecta à família de Deus.'},
+{q:'O que "santificado seja o teu nome" ensina?',o:['Pedir que Deus revele Seu nome secreto','Reconhecer que Deus é santo e adorá-Lo com palavras e ações','Pedir proteção contra uso indevido do nome de Deus','Dar um título especial a Deus'],a:1,e:'"Santificado seja o teu nome": Deus é santo! Devemos reconhecer isso e adorá-Lo não apenas com Palavras, mas com nossas ações.'},
+{q:'O que "venha o teu Reino" significa?',o:['Pedido pela segunda vinda imediata','Reconhecer que Deus é Rei e que Seu reino eterno é superior à nossa realidade momentânea','Pedir que a Igreja cresça','Buscar prosperidade'],a:1,e:'"Venha o teu Reino": Deus é Rei. Há um reino eterno superior à nossa realidade terrena e momentânea.'},
+{q:'O que "o pão nosso de cada dia" representa?',o:['Riqueza e abundância','Dependência e confiança diária no sustento de Deus','Prosperidade financeira','Gratidão pela alimentação literal'],a:1,e:'"O pão nosso de cada dia nos dá hoje": dependência e confiança diária no sustento de Deus.'},
+{q:'O que "perdoa-nos... assim como nós também perdoamos" ensina?',o:['Deus só perdoa quem já perdoou a todos','Confissão — não podemos ser orgulhosos de não pedir perdão nem de não perdoar','O perdão humano é mais importante','Devemos perdoar para merecer o perdão'],a:1,e:'"Perdoa-nos as nossas dívidas, assim como nós também perdoamos": confissão. Não podemos ser orgulhosos de não pedir perdão nem de não perdoar.'},
+{q:'Por que precisamos nos reunir com os irmãos na fé?',o:['Para cumprir obrigação religiosa','Para cultuar, servir e participar da Igreja — o convívio nos fortalece','Apenas para os sacramentos','Para mostrar que somos cristãos'],a:1,e:'É importante estarmos reunidos com os irmãos na fé, cultuando, servindo e participando das atividades da Igreja.'},
+{q:'Hebreus 10.25 nos exorta a:',o:['Não fazer promessas que não cumpriremos','Não deixarmos de nos congregar','Orar sempre em silêncio','Não participar de cultos ecumênicos'],a:1,e:'Hebreus 10.25: "Não deixemos de nos congregar, como é costume de alguns. Pelo contrário, façamos admoestações, ainda mais agora que vocês veem que o Dia se aproxima."'},
+{q:'A mordomia do tempo inclui cuidar de qual aspecto familiar?',o:['Apenas da educação escolar dos filhos','Tempo com família conforme orientações bíblicas de Efésios 5 e 6','Apenas do lazer familiar','Apenas das finanças'],a:1,e:'Como mordomos devemos usar o tempo de maneira sábia, levando em conta nosso tempo com Deus, nossa família e nosso trabalho.'},
+{q:'Efésios 5.22 orienta as esposas a:',o:['Tomar a liderança financeira','Sujeitar-se ao próprio marido, como ao Senhor','Trabalhar fora de casa','Escolher a religião da família'],a:1,e:'Efésios 5.22: "Esposas, que cada uma de vocês se sujeite a seu próprio marido, como ao Senhor."'},
+{q:'Efésios 5.25 orienta os maridos a:',o:['Prover financeiramente','Amar a esposa como Cristo amou a Igreja e se entregou por ela','Ser o único a tomar decisões','Liderar os estudos bíblicos em casa'],a:1,e:'Efésios 5.25: "Maridos, que cada um de vocês ame a sua esposa, como também Cristo amou a Igreja e se entregou por ela."'},
+{q:'Por que Deus descansou após a criação (Gn 2.2-3)?',o:['Porque estava cansado','Para nos ensinar que nós precisamos descansar','Para mostrar que a criação estava incompleta','Para iniciar o sábado eterno'],a:1,e:'Deus não precisava descansar, mas fez isso para nos ensinar que nós precisamos descansar! O descanso foi estabelecido por Deus.'},
+{q:'Por que a Igreja do Nazareno não guarda o sábado obrigatoriamente?',o:['O domingo substituiu o sábado','Colossenses 2.16-17 ensina que o sábado era sombra das coisas que haviam de vir — o corpo é de Cristo','O NT aboliu todos os dias sagrados','Tradição protestante'],a:1,e:'Colossenses 2.16-17: "que ninguém julgue vocês por causa de... sábados, porque tudo isso tem sido sombra das coisas que haviam de vir; porém o corpo é de Cristo."'},
+{q:'Qual é a base bíblica para o dízimo antes da Lei de Moisés?',o:['Adão e Eva dando frutos a Deus','Abraão dando o dízimo a Melquisedeque (Gênesis 14.17-21)','Noé após o dilúvio','Jacó prometendo o dízimo'],a:1,e:'Os 10% (dízimo) são anteriores à Lei! Abraão deu ao dízimo a Melquisedeque (Gênesis 14.17-21), que era um "tipo" de Cristo (Hebreus 7.1-3).'},
+{q:'Como Jesus tratou o tema do dízimo em Mateus 23.23?',o:['Jesus aboliu o dízimo','Jesus reforçou: os fariseus deveriam sim dar o dízimo','Jesus disse que era apenas para os ricos','Jesus substituiu por oferta voluntária'],a:1,e:'Mateus 23.23: Jesus reforçou a importância do dízimo dizendo que os fariseus deveriam sim dar o dízimo.'},
+{q:'O que é o dízimo em essência?',o:['Um imposto religioso','O dinheiro que devolvemos como forma de honrar a Deus e demonstrar gratidão','Contribuição opcional','Prática somente para membros plenos'],a:1,e:'Dízimo é o dinheiro que devolvemos como forma de honrar a Deus e demonstrar gratidão (Malaquias 1.6-14). Devolvemos — não damos — pois tudo já é de Deus.'},
+{q:'O que 2 Coríntios 9.10 ensina sobre os recursos?',o:['Guardar como poupança','Deus dá semente para semearmos e pão para nos alimentar','Multiplicar em nosso favor','Dividir igualmente com todos'],a:1,e:'2 Coríntios 9.10: Deus dá semente para semearmos e pão para nos alimentar. Precisamos discernir o que é para nos saciar e o que é para semear.'},
+{q:'Qual é a nossa responsabilidade quanto aos outros 90% segundo Mateus 25.19-27?',o:['Gastar livremente','Prestar contas de como usamos aquilo que Deus confiou a nós','Guardar como herança para os filhos','Dar à Igreja também'],a:1,e:'Prestaremos contas de como usamos aquilo que Deus confiou a nós (Mateus 25.19-27). Tudo que somos e temos vem de Deus.'},
+{q:'Qual é o objetivo final da mordomia cristã?',o:['Acumular riquezas para a obra','Gerenciar tudo de forma que o nome de Deus seja glorificado','Tornar-se financeiramente independente','Dar todo o excedente à Igreja'],a:1,e:'O que Deus nos dá é para ser usado de forma que o nome dEle seja glorificado. A mordomia tem como fim último a glória de Deus.'},
+{q:'O que a mordomia do tempo NÃO inclui?',o:['Cuidar do tempo com Deus','Cuidar do tempo com a família','Cuidar do tempo de trabalho','Acumular o máximo de horas em atividades religiosas para agradar a Deus'],a:3,e:'Mordomia do tempo não é acumular atividades religiosas, mas usar o tempo de forma sábia e equilibrada — Deus, família e trabalho.'},
+{q:'O que Salmos 133 fala sobre os irmãos?',o:['Cantar louvores individualmente','Viverem unidos é onde o Senhor ordena Sua bênção e vida para sempre','Fazer doações para o templo','Jejuar coletivamente'],a:1,e:'Salmos 133: "Oh! Como é bom e agradável viverem unidos os irmãos!... Ali o Senhor ordena a sua bênção e a vida para sempre."'},
+{q:'O que "não nos deixes cair em tentação" na oração modelo ensina?',o:['Que Deus cria as tentações','Reconhecer humildemente que estamos sendo tentados e pedir ajuda de Deus, querendo vitória','Devemos evitar todas as situações difíceis','Somos incapazes de resistir qualquer tentação'],a:1,e:'"Não nos deixes cair em tentação": reconhecer humildemente que estamos sendo tentados e pedir a ajuda graciosa de Deus, querendo vitória sobre o pecado.'},
+{q:'Qual versículo afirma que podemos confiar completamente na Bíblia?',o:['Hebreus 10.25','2 Timóteo 3.16-17','Salmos 133','Malaquias 3.10'],a:1,e:'2 Timóteo 3.16-17: "Toda a Escritura é inspirada por Deus e útil para o ensino, para a repreensão, para a correção, para a educação na justiça."'},
+]},
+{id:'m5',label:'Aula 05',title:'Cobertura Espiritual',questions:[
+{q:'Qual passagem do AT serve de base para a Cidade de Refúgio na Aula 05?',o:['Gênesis 4.1-16','Números 35.9-27','Levítico 25.1-10','Deuteronômio 19.1-13'],a:1,e:'Números 35.9-27: As cidades de refúgio eram estabelecidas por Deus — quem causou morte acidentalmente poderia se refugiar, protegido da vingança.'},
+{q:'O que a lei do "olho por olho" representa no contexto da cidade de refúgio?',o:['A crueldade da lei antiga','A lei de vingança que o pecador enfrenta sem proteção','A base para o sistema judicial moderno','O princípio de justiça perfeita'],a:1,e:'A lei era: olho por olho, dente por dente. A cidade de refúgio protegia o pecador da lei de vingança antes do julgamento justo.'},
+{q:'O que a cidade de refúgio simboliza?',o:['O céu','A lei mosaica','A Igreja','Israel'],a:2,e:'A cidade de refúgio era como seria a Igreja — lugar de proteção e cobertura para os que buscam refúgio.'},
+{q:'Quem representa os pecadores na interpretação da cidade de refúgio?',o:['Os sacerdotes','Os levitas','Aqueles que erraram sem intenção — nós, os pecadores','Os profetas'],a:2,e:'O homicida representa os pecadores — nós, que precisamos de refúgio da condenação que merecemos.'},
+{q:'Quem é o sumo sacerdote na interpretação da cidade de refúgio?',o:['Moisés','Arão','Jesus','Pedro'],a:2,e:'O sumo sacerdote é Jesus. Quando o sumo sacerdote morria, o refugiado ficava livre — Jesus morreu para nos libertar completamente.'},
+{q:'Quem é o "vingador" na interpretação da cidade de refúgio?',o:['A lei mosaica','O diabo','Os inimigos de Israel','A morte'],a:1,e:'O vingador é o diabo. Assim como havia um vingador que buscava matar o que havia errado, o diabo busca nossa destruição.'},
+{q:'Qual é o título da parábola de Lucas 10.25-35 estudada na Aula 05?',o:['A Parábola do Filho Pródigo','A Parábola do Semeador','A Parábola do Bom Samaritano','A Parábola dos Talentos'],a:2,e:'A parábola do Bom Samaritano (Lucas 10.25-35) é chamada de "um resumo de toda a Bíblia" — seus simbolismos abrangem toda a história da redenção.'},
+{q:'O que o "homem que descia" representa?',o:['Um pecador intencional','A humanidade que trocou o Éden por prazeres, perdeu tudo e ficou meio morta espiritualmente','Um discípulo que abandonou Jesus','Um fariseu hipócrita'],a:1,e:'O homem representa a humanidade. Decidiu trocar o Éden por prazeres e perdeu tudo. A humanidade está meio morta — fisicamente viva, mas espiritualmente morta.'},
+{q:'O que o homem perdeu ao "descer"?',o:['Apenas seu dinheiro e roupas','A liberdade, o sustento, a saúde, a vida eterna e a semelhança de Deus','Apenas família e amigos','Apenas reputação social'],a:1,e:'Perdeu tudo: a liberdade, o sustento, a saúde, a vida eterna, a semelhança de Deus. Ficou meio morto.'},
+{q:'O que o sacerdote na parábola representa?',o:['Jesus','Os apóstolos','Os sacrifícios — incapazes de satisfazer a justiça de Deus e salvar o homem','Os líderes da Igreja primitiva'],a:2,e:'O sacerdote representa os sacrifícios — incapazes de satisfazer a justiça de Deus. Hebreus 10.4: "é impossível que o sangue de touros e de bodes tire pecados."'},
+{q:'O que o levita na parábola representa?',o:['A misericórdia de Deus','A lei — incapaz de salvar, mas que revela que precisamos ser salvos','Cristãos que abandonam necessitados','Líderes religiosos hipócritas'],a:1,e:'O levita representa a lei: incapaz de salvar o homem. É pela lei que entendemos que precisamos ser salvos (Rm 3.20).'},
+{q:'O que o samaritano representa?',o:['Um judeu bondoso','Paulo, o apóstolo','Jesus, o Messias esperado que veio salvar o que estava perdido','O Espírito Santo'],a:2,e:'O samaritano representa Jesus, o Messias esperado. Jesus ao ver o homem caído teve compaixão.'},
+{q:'O que o óleo aplicado nas feridas simboliza?',o:['A Palavra de Deus','O sangue de Cristo','O Espírito Santo (Sl 23.5)','O batismo nas águas'],a:2,e:'Óleo: Símbolo do Espírito Santo — Sl 23.5: "Unges a minha cabeça com óleo."'},
+{q:'O que o vinho aplicado nas feridas simboliza?',o:['A alegria da salvação','O sangue purificador de Cristo derramado na Cruz','O sacramento da Santa Ceia','A comunhão dos crentes'],a:1,e:'Vinho: Representa o sangue purificador de Cristo. 1 Pedro 1.18-19: "resgatados... com precioso sangue... o sangue de Cristo."'},
+{q:'O que a hospedaria representa?',o:['O céu eterno','A Igreja — lugar de segurança, cuidado, tratamento, cobertura e restauração','O lar do samaritano','A sinagoga'],a:1,e:'A Hospedaria representa a Igreja: lugar de segurança, cuidado, tratamento, cobertura e restauração.'},
+{q:'O que o hospedeiro representa?',o:['O pastor','O Espírito Santo — "Não vos deixarei órfãos"','Os anjos','Os apóstolos'],a:1,e:'O hospedeiro representa o Espírito Santo — "Não vos deixarei órfãos" (Jesus). É Ele quem cuida da hospedaria (Igreja).'},
+{q:'O que "quando eu voltar" representa?',o:['O samaritano voltando ao caminho','A segunda vinda de Jesus Cristo','A ressurreição dos mortos','O juízo final apenas'],a:1,e:'"Quando eu voltar" — v.35: Jesus garantiu que irá voltar para nos buscar. A parábola aponta para a segunda vinda de Cristo.'},
+{q:'Quem é o dono e construtor da Igreja segundo Mateus 16.18?',o:['Pedro','Os apóstolos','Cristo — "minha Igreja" e "edificarei"','Os pastores e bispos'],a:2,e:'Mateus 16.18: "edificarei a minha Igreja." A Igreja pertence a Cristo (minha Igreja). Cristo é quem edifica (edificarei).'},
+{q:'O que as portas do inferno não conseguem segundo Mateus 16.18?',o:['Atacar os crentes individualmente','Prevalecer contra a Igreja','Impedir a segunda vinda','Destruir a Bíblia'],a:1,e:'Mateus 16.18: "as portas do inferno não prevalecerão contra ela." A Igreja é invencível — seu construtor é Cristo.'},
+{q:'Segundo 1 Coríntios 12.27, como os crentes se relacionam com Cristo?',o:['São servos de Cristo','São amigos de Cristo','São o corpo de Cristo e individualmente membros desse corpo','São espectadores'],a:2,e:'1 Coríntios 12.27: "Ora, vocês são o corpo de Cristo e, individualmente, membros desse corpo."'},
+{q:'O que acontece com o crente que anda sozinho segundo a Aula 05?',o:['Maior liberdade espiritual','Fica exposto como presa fácil para os predadores','Crescimento espiritual mais intenso','Melhor comunhão com Deus'],a:1,e:'Na natureza, a presa favorita dos predadores são as que andam sozinhas e afastadas do rebanho. O crente isolado é vulnerável.'},
+{q:'O que Hebreus 10.24-25 manda fazer em relação aos outros crentes?',o:['Não nos envolver em problemas alheios','Cuidar de nos animar uns aos outros no amor e boas obras, não deixando de nos congregar','Apenas orar pelos outros de longe','Deixá-los resolver seus problemas'],a:1,e:'Hebreus 10.24-25: "Cuidemos também de nos animar uns aos outros no amor e na prática de boas obras. Não deixemos de nos congregar."'},
+{q:'O que a Aula 05 afirma sobre relacionamento sadio com Deus sem a Igreja?',o:['É possível com disciplina pessoal','Não existe — a Igreja é parte essencial da vida espiritual saudável','É possível com oração intensa','É preferível para quem tem maturidade'],a:1,e:'Não existe um relacionamento sadio com Deus sem a Igreja. A Igreja é lugar de proteção e de autoridade.'},
+{q:'A Igreja é descrita na Aula 05 como lugar de quê?',o:['Apenas culto e adoração','Proteção, autoridade, alimentação espiritual e guarda até a volta de Cristo','Apenas evangelismo','Debate teológico'],a:1,e:'A Igreja te alimenta, te guarda até a volta daquele que vem te buscar. Lugar de proteção, autoridade e cuidado.'},
+{q:'Hebreus 10.4 afirma que o sangue de animais é incapaz de:',o:['Providenciar redenção temporal','Tirar pecados','Satisfazer as exigências do templo','Substituir a oração'],a:1,e:'Hebreus 10.4: "Porque é impossível que o sangue de touros e de bodes tire pecados."'},
+{q:'Romanos 3.20 ensina que pela lei é impossível:',o:['Conhecer Deus profundamente','Ser justificado — a lei apenas traz o pleno conhecimento do pecado','Guardar os mandamentos','Amar ao próximo'],a:1,e:'Romanos 3.20: "porquanto pelas obras da lei nenhum homem será justificado diante dele; pois o que vem pela lei é o pleno conhecimento do pecado."'},
+{q:'O que João 16.13 diz sobre o Espírito Santo na Igreja?',o:['O Espírito fala por conta própria','O Espírito nos guiará em toda a verdade, não falará de si mesmo, dirá o que tiver ouvido','O Espírito substituirá Jesus','O Espírito só fala no fim dos tempos'],a:1,e:'João 16.13: "nos guiará em toda a verdade, não falará de si mesmo, mas dirá tudo o que tiver ouvido, e vos anunciará o que há de vir."'},
+{q:'Qual a conexão entre a Cidade de Refúgio e a Parábola do Bom Samaritano?',o:['São histórias completamente independentes','Ambas são do AT apenas','Ambas simbolizam a Igreja como lugar de proteção, cobertura e restauração','Ambas falam de leis judiciais'],a:2,e:'A cidade de refúgio era como seria a Igreja. A hospedaria na parábola representa a Igreja — ambas apontam para o mesmo símbolo: proteção, cobertura e restauração.'},
+{q:'Por que o crente isolado fica em risco segundo a Aula 05?',o:['Por perder o acesso à liderança pastoral','Porque o diabo atua mais nas pessoas isoladas, assim como predadores atacam presas que andam sozinhas do rebanho','Por perder o acesso aos sacramentos','Por perder o conhecimento bíblico'],a:1,e:'Na natureza, a presa favorita e fácil para os predadores são aquelas que andam sozinhas e afastadas do rebanho. O cristão isolado fica exposto.'},
+]},
+{q:'Qual versículo confirma que os crentes juntos formam o Corpo de Cristo?',o:['Mateus 16.18','Hebreus 10.25','1 Coríntios 12.27','João 16.13'],a:2,e:'1 Coríntios 12.27: "Ora, vocês são o corpo de Cristo e, individualmente, membros desse corpo." Ninguém é Igreja sozinho — juntos somos o corpo.'}
+,
+{id:'m6',label:'Aula 06',title:'Vida e Testemunho Cristão',questions:[
+{q:'Quais são os três pilares do Pacto de Caráter Cristão?',o:['Orar, jejuar e dar','Fazer o que a Palavra ordena, evitar o mal e permanecer em comunhão com a Igreja','Batizar, pregar e curar','Dízimo, louvor e evangelismo'],a:1,e:'Os 3 pilares: 1) Fazendo o que a Palavra ordena; 2) Evitando o mal de toda espécie; 3) Permanecendo em comunhão sincera com a Igreja.'},
+{q:'Quais são evidências exigidas de quem deseja se unir à Igreja do Nazareno?',o:['Nenhuma especial','Evidência de salvação por comportamento santo, piedade vital e entrega a Deus','Apenas declarar fé verbalmente','Ter sido membro de outra Igreja'],a:1,e:'É necessário mostrar evidência de salvação por comportamento santo e piedade vital; que estejam ou desejem estar purificados; e que deem evidência de entrega a Deus.'},
+{q:'Qual é o fundamento bíblico da abstinência de álcool e tabaco?',o:['Levítico 11','1 Coríntios 6.19-20 — o corpo é templo do Espírito Santo','Romanos 14','Provérbios 20.1'],a:1,e:'1 Coríntios 6.19-20: "o corpo de vocês é santuário do Espírito Santo... glorifiquem a Deus no corpo." O corpo é templo — deve ser tratado com respeito.'},
+{q:'Qual é a posição da Igreja do Nazareno quanto ao álcool e tabaco?',o:['Moderação responsável','Proibição somente para líderes','Abstinência total — pedimos abstinência total de todos os inebriantes','Liberdade de consciência'],a:2,e:'A posição da Igreja é abstinência total. À luz das Escrituras e da experiência humana, como comunidade de fé empenhada em vida santa, a posição é a abstinência, não a moderação.'},
+{q:'A Igreja do Nazareno se posiciona como sobre a Maçonaria?',o:['A favor — é organização de caridade','Neutra','Contra — a natureza quase religiosa diminui a lealdade cristã e o caráter secreto opõe-se ao testemunho público','A favor desde que sem rituais secretos'],a:2,e:'Contra. A natureza quase religiosa de tais organizações diminui a lealdade do cristão, e o caráter secreto opõe-se ao testemunho público cristão.'},
+{q:'Qual é a posição da Igreja sobre jogos de azar?',o:['Permitidos se legais','Evitar jogos de azar, legais ou ilegais — o resultado é nocivo ao indivíduo e à sociedade','Proibidos apenas se causarem vício','Questão de consciência individual'],a:1,e:'A Igreja entende que o resultado dos jogos de azar é nocivo tanto ao indivíduo como à sociedade — sejam legais ou ilegais.'},
+{q:'Qual é a posição da Igreja sobre a sexualidade humana?',o:['É assunto pessoal','A sexualidade é expressão da santidade pretendida por Deus e deve ser vivida dentro do casamento entre homem e mulher','Pode ser vivida livremente entre adultos','A Igreja não deve se posicionar'],a:1,e:'A Igreja crê que a sexualidade humana é expressão da santidade e beleza pretendidas por Deus, a ser vivida dentro do casamento entre homem e mulher.'},
+{q:'Qual é a posição da Igreja do Nazareno sobre o aborto?',o:['Pró-escolha em todos os casos','Neutro','Pró-vida — a vida começa na concepção e deve ser protegida','Permissivo em casos de estupro e risco de vida'],a:2,e:'A Igreja afirma a santidade da vida humana desde a concepção. Opõe-se ao aborto induzido por conveniência.'},
+{q:'Como o cristão deve tratar o entretenimento segundo a Aula 06?',o:['Todo entretenimento é pecaminoso','Aceitar o que apoia o viver santo, afirma valores bíblicos e fortalece a família; e testificar contra o que desonra a Deus','Pode consumir qualquer entretenimento com moderação','O entretenimento é irrelevante para a vida espiritual'],a:1,e:'Devemos aceitar o entretenimento que apoia o viver santo. Devemos testificar contra o que desonra a Deus, bem como violência, sensualidade, pornografia e materialismo.'},
+{q:'O que o Pacto de Caráter exige em relação à Igreja?',o:['Apenas frequentar cultos dominicais','Permanecer em comunhão sincera, não agindo contra as doutrinas, totalmente submetido e envolvido na confirmação e expansão','Pagar o dízimo regularmente','Participar de apenas um ministério'],a:1,e:'3º pilar: Permanecendo em comunhão sincera com a Igreja, não agindo contra as suas doutrinas e costumes, estando totalmente submetido e ativamente envolvido.'},
+{q:'O que significa "despojar o velho homem" e "revestir o novo homem"?',o:['É automático na conversão','Abandonar os velhos padrões de conduta e mente carnal, e revestir de novo e santo modo de viver e mente de Cristo','É apenas metáfora espiritual','Refere-se ao vestuário físico'],a:1,e:'Devemos "despojar-nos do velho homem" — velhos padrões e mente carnal — e "revestir-nos do novo homem" — novo e santo modo de viver e a mente de Cristo.'},
+{q:'Qual é a posição da Igreja sobre atividade sexual entre pessoas do mesmo sexo?',o:['Aceita com amor genuíno','Neutro — cada um decide','Contrária à vontade de Deus, embora a Igreja seja acolhedora e ofereça graça a todos','Aceita após estudo bíblico'],a:2,e:'A Igreja crê que a intimidade sexual entre pessoas do mesmo sexo é contrária à vontade de Deus, mas reconhece a responsabilidade de ser comunidade acolhedora que perdoa e ama.'},
+{q:'Qual é a posição da Igreja sobre o divórcio?',o:['O divórcio é pecado imperdoável','O casamento deve ser compromisso para toda a vida; a Igreja preserva os laços e oferece graça aos feridos pelo divórcio','O divórcio é aceitável quando ambos concordam','Proibido somente para líderes'],a:1,e:'A Igreja entende que o casamento deve ser compromisso para toda a vida. A Igreja deve preservar os laços matrimoniais onde for sábio e possível, e oferecer conselho e graça.'},
+{q:'Segundo a Aula 06, como o cristão deve se vestir?',o:['Com roupas de marcas cristãs','Com a simplicidade e modéstia cristãs que convêm à santidade','Sem qualquer adorno','Com roupas que mostrem prosperidade'],a:1,e:'Nosso povo deve vestir-se com a simplicidade e modéstia cristãs que convêm à santidade (1 Tm 2.8-10; Tg 4.6; 1 Pe 3.3-4).'},
+{q:'Qual é a posição da Igreja sobre o aborto de gravidez indesejada?',o:['É uma decisão médica neutra','Muitas vezes ocorre por se ignorar princípios cristãos; a Igreja pede praticar a ética do NT na sexualidade','É aceitável no primeiro trimestre','É permitido mediante aprovação da congregação'],a:1,e:'A Igreja reconhece que isso muitas vezes ocorre por se ignorar princípios cristãos de responsabilidade sexual. Pede que se pratique a ética do Novo Testamento.'},
+{q:'Qual é a postura da Igreja em relação a quem já foi afetado pela tragédia do aborto?',o:['Julgamento e afastamento','A Igreja é lugar de esperança e redenção — oferece a mensagem do perdão de Deus','Indiferença','Aconselhamento apenas para quem pede'],a:1,e:'"A Igreja é um lugar de esperança e redenção para todos os que sofrem dores físicas, emocionais e espirituais" resultantes do aborto.'},
+{q:'O que "o corpo humano é o templo do Espírito Santo" implica?',o:['Devemos ter corpos fisicamente perfeitos','Nossa sexualidade deve estar em harmonia com a vontade de Deus e somos exortados a glorificar a Deus em nossos corpos','Devemos evitar atividade física intensa','Somente os santificados têm o Espírito'],a:1,e:'É necessário que nossa sexualidade esteja em harmonia com a vontade de Deus. Os nossos corpos não nos pertencem — somos exortados a glorificar a Deus neles.'},
+{q:'O que significa "o povo de Deus é caracterizado por amor santo"?',o:['Apenas sentimentos positivos','Amor que inclui acolhimento, confissão, perdão, santificação e confronto honesto com o pecado','Amor que nunca reprova','Amor apenas para os da Igreja'],a:1,e:'Se falharmos em confrontar honestamente o pecado, não estamos amando. Se falharmos em amar, não podemos participar da cura de Deus.'},
+{q:'Qual é a posição da Igreja sobre a eutanásia?',o:['Neutra','Favorável com sofrimento intenso','Contra — a Igreja empenha-se em lutar contra a eutanásia','Favorável somente para idosos em estado terminal'],a:2,e:'A Igreja crê na santidade da vida humana e empenha-se em lutar contra a eutanásia e a negação do tratamento médico justo.'},
+{q:'O que o Pacto de Caráter exige sobre "fazer o bem"?',o:['Apenas rezar pelas necessidades','Amar a Deus, evangelizar, fazer o bem, alimentar famintos, vestir os nus, contribuir com dízimos e participar das ordenanças','Apenas frequentar os cultos','Apenas evangelizar os vizinhos'],a:1,e:'Fazer o bem inclui: amar a Deus, trazer os perdidos ao evangelho, fazer o bem às pessoas, alimentar famintos, vestir os nus, contribuir com dízimos e participar das ordenanças.'},
+{q:'Qual é a posição sobre pesquisa com células-tronco embrionárias?',o:['É questão científica que a Igreja não aborda','A Igreja luta contra essa prática — acredita na santidade de toda vida desde a concepção','É permitida se houver benefício médico','É decisão de cada família'],a:1,e:'A Igreja empenha-se em lutar contra a pesquisa de células-tronco em embriões humanos, pois crê que a santidade se estende à criança que ainda não nasceu.'},
+{q:'Segundo 1 Coríntios 6.9-11, qual é a mensagem de esperança para quem vivia em pecado sexual?',o:['Não há esperança','A graça de Deus é suficiente — alguns eram assim, mas foram lavados, santificados e justificados em Cristo','Devem guardar segredo do passado','Devem fazer penitências'],a:1,e:'1 Coríntios 6.9-11: "E assim eram alguns de vocês. Mas vocês foram lavados, foram santificados, foram justificados em nome do Senhor Jesus Cristo."'},
+{q:'O que a Igreja faz em casos de crise de gravidez indesejada?',o:['A mulher deve resolver sozinha','Oferece contexto de amor, oração e aconselhamento, podendo incluir centros de aconselhamento e serviços de adoção','Julga a situação publicamente','É responsabilidade só dos familiares'],a:1,e:'A crise de gravidez indesejada pede que a comunidade de crentes ofereça contexto de amor, oração e aconselhamento.'},
+{q:'Qual versículo fundamenta a luta contra a imoralidade sexual?',o:['Gênesis 2.24 apenas','Gênesis 19.4-11; Êxodo 20.14; Levítico 18.22; Mateus 5.27-32; Romanos 1.26-27 entre outros','Apenas o NT','Apenas Levítico 18'],a:1,e:'A posição sobre imoralidade sexual é fundamentada em ampla base bíblica: Gn 19; Êx 20.14; Lv 18.22; Mt 5.27-32; Rm 1.26-27; 1 Co 6.9-11; Gl 5.19; 1 Ts 4.3-7.'},
+{q:'O que "permanecer em comunhão sincera" com a Igreja significa?',o:['Apenas frequentar cultos','Não agir contra as doutrinas da Igreja, mas estar totalmente submetido e ativamente envolvido na confirmação e expansão','Pagar o dízimo regularmente','Participar de todos os grupos'],a:1,e:'Permanecendo em comunhão sincera, não agindo contra as suas doutrinas e costumes, mas estando totalmente submetido e ativamente envolvido (Ef 2.18-22; Fp 2.1-8).'},
+{q:'O que Romanos 12.1-2 exige dos cristãos?',o:['Apresentar o corpo perfeito sem pecado','Apresentar os corpos como sacrifício vivo, santo e agradável a Deus, sem se conformar ao século','Manter o corpo em perfeita saúde','Usar o corpo apenas para a Igreja'],a:1,e:'Romanos 12.1-2: "Apresentai os vossos corpos como sacrifício vivo, santo e agradável a Deus... E não vos conformeis com os padrões deste século."'},
+{q:'Qual é a base da oposição da Igreja ao uso de drogas ilícitas?',o:['Apenas a lei civil proíbe','A evidência médica dos perigos e as admoestações bíblicas para controle responsável da mente e do corpo','Apenas questão cultural','Apenas porque causam dependência'],a:1,e:'A Igreja se empenha em abster-se de intoxicantes e alucinógenos, tendo em conta a evidência médica e as admoestações bíblicas (Mt 22.37-39; Rm 12.1-2).'},
+{q:'Qual é a posição sobre polígamia ou poliandria?',o:['Aceita em culturas onde é prática cultural','Aceita se todos concordam','Contra — a fidelidade de Deus se reflete no compromisso monogâmico; poligamia destrói essa fidelidade exclusiva','Neutro — questão de legislação civil'],a:2,e:'A Igreja crê que a fidelidade de Deus se reflete no compromisso monogâmico entre marido e mulher. A poligamia ou poliandria destroem a fidelidade única e exclusiva pretendida no casamento.'},
+{q:'Por que o pecado sexual não é apenas pessoal segundo a Aula 06?',o:['Afeta apenas a família imediata','Permeia os sistemas e estruturas do mundo — por isso a Igreja deve dar testemunho da beleza dos propósitos santos de Deus','Afeta apenas a Igreja local','Deus punirá publicamente'],a:1,e:'O pecado sexual permeia os sistemas e estruturas do mundo. Por isso a Igreja deve dar testemunho da realidade da beleza e singularidade dos propósitos santos de Deus.'},
+{q:'Qual é a mensagem central sobre a vida cristã e o testemunho segundo a Aula 06?',o:['Apenas obedecer regras externas','A vida cristã é uma transformação interna — despojar o velho homem e revestir o novo — que se expressa em caráter santo, testemunho público e comunhão com a Igreja','Apenas evitar pecados graves','Apenas evangelizar ativamente'],a:1,e:'Pela graça de Deus, devemos despojar-nos do velho homem (velhos padrões e mente carnal) e revestir-nos do novo homem (novo modo de viver e mente de Cristo), vivendo em comunhão com a Igreja e dando testemunho ao mundo.'}
+]},
+];
+
+// QUIZ ENGINE
+let currentMod=null, qIdx=0, answers=[], answered=[];
+
+function renderModuleSelector(){
+  const ml=document.getElementById('quizModuleList');
+  ml.innerHTML='';
+  quizModules.forEach(m=>{
+    const best=localStorage.getItem('quiz_best_'+m.id);
+    const div=document.createElement('div');
+    div.className='qm-card';
+    div.innerHTML=`<div class="qm-num">${m.label.replace('Aula ','').padStart(2,'0')}</div>
+      <div class="qm-info"><h4>${m.title}</h4><p>${m.label} &middot; 30 questões</p></div>
+      ${best?`<div class="qm-score">Melhor: ${best}/30</div>`:''}
+      <div class="qm-arr">›</div>`;
+    div.addEventListener('click',()=>startQuiz(m));
+    ml.appendChild(div);
+  });
+}
+
+function startQuiz(mod){
+  currentMod=mod;
+  qIdx=0;
+  answers=Array(mod.questions.length).fill(null);
+  answered=Array(mod.questions.length).fill(false);
+  document.getElementById('quizSelector').style.display='none';
+  document.getElementById('scoreArea').style.display='none';
+  document.getElementById('quizArea').style.display='block';
+  document.getElementById('quizRunner').style.display='block';
+  document.getElementById('quizNav').style.display='flex';
+  renderQuestion();
+}
+
+function backToSelector(){
+  document.getElementById('quizRunner').style.display='none';
+  document.getElementById('quizSelector').style.display='block';
+  renderModuleSelector();
+}
+
+function renderQuestion(){
+  const qa=document.getElementById('quizArea');
+  const score=document.getElementById('scoreArea');
+  const nav=document.getElementById('quizNav');
+  const total=currentMod.questions.length;
+
+  if(qIdx>=total){
+    qa.style.display='none'; nav.style.display='none'; score.style.display='block';
+    const correct=answers.filter((a,i)=>a===currentMod.questions[i].a).length;
+    const prev=parseInt(localStorage.getItem('quiz_best_'+currentMod.id)||0);
+    if(correct>prev)localStorage.setItem('quiz_best_'+currentMod.id,correct);
+    const pct=Math.round(correct/total*100);
+    const icon=pct>=80?'🏆':pct>=60?'📖':'🙏';
+    score.innerHTML=`<div class="score-panel">
+      <div class="sp-icon">${icon}</div>
+      <h3>${pct>=80?'Excelente!':pct>=60?'Bom progresso!':'Continue estudando!'}</h3>
+      <div style="font-size:.82rem;color:var(--gold);margin-bottom:8px">${currentMod.title}</div>
+      <div class="score-num">${correct} / ${total}</div>
+      <p>${pct}% de aproveitamento<br><br>
+      ${pct>=80?'Você demonstra sólido conhecimento desta aula!':
+        pct>=60?'Bom! Revise as questões que errou.':
+        'Revise o conteúdo da aula e tente novamente!'}</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="backToSelector()">‹ Outros Módulos</button>
+        <button class="btn btn-primary" onclick="startQuiz(currentMod)">↺ Refazer</button>
       </div>
-    `).join('');
+    </div>`;
+    return;
   }
+  const d=currentMod.questions[qIdx];
+  const pct=Math.round((qIdx+1)/total*100);
+  document.getElementById('quizBar').style.width=pct+'%';
+  document.getElementById('quizCount').textContent=(qIdx+1)+'/'+total;
 
-  function toggleCard(id) {
-    const detail = document.getElementById('detail-'+id);
-    const card = document.getElementById('card-'+id);
-    const isOpen = detail.classList.contains('open');
-    // close all
-    document.querySelectorAll('.entry-detail.open').forEach(d => d.classList.remove('open'));
-    document.querySelectorAll('.entry-card.selected').forEach(c => c.classList.remove('selected'));
-    if (!isOpen) { detail.classList.add('open'); card.classList.add('selected'); }
-  }
+  const sel=answers[qIdx], done=answered[qIdx];
+  qa.innerHTML=`<div class="qcard">
+    <div class="qmod">${currentMod.label} – ${currentMod.title}</div>
+    <div class="qq">${d.q}</div>
+    <div class="qopts">
+      ${d.o.map((opt,i)=>`<button class="qopt${done?(i===d.a?' correct':i===sel&&sel!==d.a?' wrong':''):''}"
+        ${done?'disabled':''} onclick="selectOpt(${i})">${opt}</button>`).join('')}
+    </div>
+    <div class="qfb${done?(sel===d.a?' correct':' wrong'):''}">
+      ${done?(sel===d.a?'✓ Correto! ':'✗ Incorreto. ')+d.e:''}
+    </div>
+  </div>`;
 
-  function toggleShowPwd(id, pwd) {
-    const el = document.getElementById('pwd-val-'+id);
-    const btn = document.getElementById('show-btn-'+id);
-    const isMasked = el.classList.contains('masked');
-    el.textContent = isMasked ? pwd : '••••••••••••';
-    el.classList.toggle('masked', !isMasked);
-    btn.textContent = isMasked ? 'ocultar' : 'mostrar';
-  }
+  document.getElementById('btnPrev').disabled=(qIdx===0);
+  document.getElementById('btnNext').disabled=!done;
+  document.getElementById('btnNext').textContent=qIdx===total-1?'Ver Resultado ›':'Próxima ›';
+}
 
-  function copyPwd(id) {
-    const e = entries.find(x => x.id === id);
-    if (e) copyText(e.pwd);
-  }
+function selectOpt(i){
+  if(answered[qIdx])return;
+  answers[qIdx]=i; answered[qIdx]=true;
+  renderQuestion();
+}
 
-  function copyText(text) {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(() => toast('📋 Copiado!')).catch(() => fallbackCopy(text));
-      } else {
-        fallbackCopy(text);
-      }
-    } catch(e) {
-      fallbackCopy(text);
-    }
-  }
+document.getElementById('btnNext').addEventListener('click',()=>{
+  if(qIdx<currentMod.questions.length){qIdx++;renderQuestion();}
+});
+document.getElementById('btnPrev').addEventListener('click',()=>{
+  if(qIdx>0){qIdx--;renderQuestion();}
+});
 
-  function fallbackCopy(text) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try {
-      document.execCommand('copy');
-      toast('📋 Copiado!');
-    } catch(e) {
-      toast('Erro ao copiar', true);
-    }
-    document.body.removeChild(ta);
-  }
-
-  function deleteEntry(id) {
-    if (!confirm('Excluir esta entrada?')) return;
-    entries = entries.filter(e => e.id !== id);
-    save();
-    renderList();
-    toast('🗑 Entrada excluída');
-  }
-
-  function openEdit(id) {
-    const e = entries.find(x => x.id === id);
-    if (!e) return;
-    document.getElementById('edit-id').value = id;
-    document.getElementById('edit-site').value = e.site;
-    document.getElementById('edit-url').value = e.url||'';
-    document.getElementById('edit-login').value = e.login;
-    document.getElementById('edit-pwd').value = e.pwd;
-    document.getElementById('edit-note').value = e.note||'';
-    checkStrength(e.pwd,'edit-strength','edit-strength-label');
-    document.getElementById('modal').classList.add('open');
-  }
-
-  function closeModal() {
-    document.getElementById('modal').classList.remove('open');
-  }
-
-  function saveEdit() {
-    const id = parseInt(document.getElementById('edit-id').value);
-    const site = document.getElementById('edit-site').value.trim();
-    const login = document.getElementById('edit-login').value.trim();
-    const pwd = document.getElementById('edit-pwd').value;
-    if (!site || !login || !pwd) { toast('⚠ Campos obrigatórios', true); return; }
-    const e = entries.find(x => x.id === id);
-    if (e) {
-      e.site = site;
-      e.url = document.getElementById('edit-url').value.trim();
-      e.login = login;
-      e.pwd = pwd;
-      e.note = document.getElementById('edit-note').value.trim();
-      save();
-      renderList();
-      closeModal();
-      toast('✓ Entrada atualizada!');
-    }
-  }
-
-  function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function escAttr(s) {
-    return String(s).replace(/'/g,"\\'").replace(/\\/g,'\\\\');
-  }
-
-  // Close modal on overlay click
-  document.getElementById('modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-  });
-
-
-  // --- BACKUP ---
-  let pendingBackup = null;
-
-  function exportBackup() {
-    if (!entries.length) { toast('⚠ Nenhuma entrada para exportar', true); return; }
-    const data = JSON.stringify({ version: 1, exported: new Date().toISOString(), entries }, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const date = new Date().toISOString().slice(0,10);
-    a.href = url;
-    a.download = 'vault-backup-' + date + '.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast('⬇ Backup exportado!');
-  }
-
-  function importBackup(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      try {
-        const data = JSON.parse(e.target.result);
-        let imported = [];
-        if (Array.isArray(data)) {
-          imported = data;
-        } else if (data.entries && Array.isArray(data.entries)) {
-          imported = data.entries;
-        } else {
-          throw new Error('Formato inválido');
-        }
-        if (!imported.length) { toast('⚠ Backup vazio ou inválido', true); return; }
-        pendingBackup = imported;
-        const info = document.getElementById('restore-info');
-        info.innerHTML = `Arquivo: <b>${file.name}</b> &nbsp;|&nbsp; Entradas no backup: <b>${imported.length}</b> &nbsp;|&nbsp; Entradas atuais: <b>${entries.length}</b>`;
-        document.getElementById('btn-confirm-restore').disabled = false;
-        document.getElementById('modal-restore').classList.add('open');
-      } catch(err) {
-        toast('❌ Arquivo inválido: ' + err.message, true);
-      }
-    };
-    reader.readAsText(file);
-    input.value = '';
-  }
-
-  function confirmRestore() {
-    if (!pendingBackup) return;
-    const mode = document.querySelector('input[name="restore-mode"]:checked').value;
-    if (mode === 'replace') {
-      if (!confirm('⚠ Isso apagará TODAS as entradas atuais. Continuar?')) return;
-      entries = pendingBackup.map(e => ({ ...e, id: e.id || Date.now() + Math.random() }));
-    } else {
-      // merge — skip duplicates by site+login
-      const existing = new Set(entries.map(e => (e.site+'|'+e.login).toLowerCase()));
-      let added = 0;
-      for (const e of pendingBackup) {
-        const key = (e.site+'|'+e.login).toLowerCase();
-        if (!existing.has(key)) {
-          entries.unshift({ ...e, id: e.id || Date.now() + Math.random() });
-          existing.add(key);
-          added++;
-        }
-      }
-      toast(`✓ ${added} entr${added===1?'ada':'adas'} importada${added===1?'':'s'}!`);
-    }
-    save();
-    renderList();
-    closeRestoreModal();
-    if (mode === 'replace') toast(`✓ ${entries.length} entradas restauradas!`);
-    pendingBackup = null;
-  }
-
-  function closeRestoreModal() {
-    document.getElementById('modal-restore').classList.remove('open');
-    pendingBackup = null;
-    document.getElementById('btn-confirm-restore').disabled = true;
-  }
-
-  document.getElementById('modal-restore').addEventListener('click', function(e) {
-    if (e.target === this) closeRestoreModal();
-  });
-
-  // Init
-  document.getElementById('count').textContent = entries.length;
+renderModuleSelector();
 </script>
 </body>
 </html>
