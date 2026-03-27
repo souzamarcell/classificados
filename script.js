@@ -134,7 +134,7 @@ let dados = [
   {
     id: 13,
     titulo: 'Lanchonete Sabor Caseiro',
-    cat: 'Comércio',
+    cat: 'Alimentação',
     preco: 'A partir de R$ 15,00',
     desc: 'Lanches, porções e refeições rápidas com sabor de comida caseira.',
     tags: ['lanche', 'comida', 'rápido'],
@@ -662,7 +662,7 @@ let dados = [
   {
     id: 61,
     titulo: 'Lanchonete Top Lanches',
-    cat: 'Comércio',
+    cat: 'Alimentação',
     preco: 'A partir de R$ 10,00',
     desc: 'Hot dog, X-salada e sucos naturais.',
     tags: ['hotdog', 'lanche', 'rápido'],
